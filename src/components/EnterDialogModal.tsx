@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/PasswordInput';
+import { t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 interface EnterDialogModalProps {
@@ -44,13 +45,13 @@ export function EnterDialogModal({ open, onOpenChange, onEnter }: EnterDialogMod
       <DialogContent className="bg-card border-border max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center font-display text-2xl text-foreground">
-            Enter Dialog
+            {t('enterDialogTitle')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           <p className="text-center text-muted-foreground">
-            Enter the 4-digit password to access the dialog
+            {t('enterPasswordPrompt')}
           </p>
 
           <PasswordInput
@@ -66,7 +67,7 @@ export function EnterDialogModal({ open, onOpenChange, onEnter }: EnterDialogMod
 
           {error && (
             <p className="text-center text-destructive text-sm animate-fade-in">
-              Wrong password. Please try again.
+              {t('wrongPassword')}
             </p>
           )}
 
@@ -81,7 +82,7 @@ export function EnterDialogModal({ open, onOpenChange, onEnter }: EnterDialogMod
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              'Enter Dialog'
+              t('enter')
             )}
           </Button>
         </div>

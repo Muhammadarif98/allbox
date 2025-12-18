@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FileCard } from '@/components/FileCard';
 import { FileUploadZone } from '@/components/FileUploadZone';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog } from '@/lib/device';
+import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
 
 interface FileRecord {
@@ -25,6 +27,9 @@ export default function DialogView() {
   const [deviceCount, setDeviceCount] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deviceLabel, setDeviceLabel] = useState<string>('');
+  const [, setRefresh] = useState(0);
+
+  const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
 
   useEffect(() => {
     if (!dialogId) {
@@ -32,9 +37,8 @@ export default function DialogView() {
       return;
     }
 
-    // Check access
     if (!hasDialogAccess(dialogId)) {
-      toast.error('You don\'t have access to this dialog');
+      toast.error(t('noAccess'));
       navigate('/');
       return;
     }
@@ -44,7 +48,6 @@ export default function DialogView() {
 
     loadData();
     
-    // Subscribe to realtime updates
     const filesChannel = supabase
       .channel(`files-${dialogId}`)
       .on(
@@ -125,18 +128,16 @@ export default function DialogView() {
     for (const file of uploadedFiles) {
       const filePath = `${dialogId}/${Date.now()}-${file.name}`;
       
-      // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from('dialog-files')
         .upload(filePath, file);
       
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(t('uploadFailed', { name: file.name }));
         continue;
       }
       
-      // Create file record
       const { error: dbError } = await supabase
         .from('files')
         .insert({
@@ -149,14 +150,13 @@ export default function DialogView() {
       
       if (dbError) {
         console.error('DB error:', dbError);
-        toast.error(`Failed to save ${file.name}`);
+        toast.error(t('saveFailed', { name: file.name }));
         continue;
       }
     }
     
-    // Update access time
     addStoredDialog(dialogId, currentLabel);
-    toast.success(`Uploaded ${uploadedFiles.length} file(s)`);
+    toast.success(t('uploadSuccess', { n: uploadedFiles.length }));
   };
 
   const handleDelete = async (fileId: string) => {
@@ -166,21 +166,19 @@ export default function DialogView() {
     setDeletingId(fileId);
     
     try {
-      // Delete from storage
       await supabase.storage
         .from('dialog-files')
         .remove([file.file_path]);
       
-      // Delete from database
       await supabase
         .from('files')
         .delete()
         .eq('id', fileId);
       
-      toast.success('File deleted');
+      toast.success(t('fileDeleted'));
     } catch (err) {
       console.error('Delete error:', err);
-      toast.error('Failed to delete file');
+      toast.error(t('deleteFailed'));
     } finally {
       setDeletingId(null);
     }
@@ -203,6 +201,8 @@ export default function DialogView() {
 
   return (
     <div className="min-h-screen p-6 md:p-10">
+      <LanguageSwitcher onChange={forceRefresh} />
+      
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <header className="flex items-center justify-between gap-4 flex-wrap animate-fade-in">
@@ -217,17 +217,17 @@ export default function DialogView() {
             </Button>
             <div>
               <h1 className="text-2xl font-display font-bold text-foreground">
-                Dialog #{dialogId?.slice(0, 8)}
+                {t('dialog')} #{dialogId?.slice(0, 8)}
               </h1>
               <p className="text-sm text-muted-foreground">
-                You are {deviceLabel}
+                {t('youAre')} {deviceLabel}
               </p>
             </div>
           </div>
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-lg">
             <Users className="w-4 h-4" />
-            <span>{deviceCount} device{deviceCount !== 1 ? 's' : ''}</span>
+            <span>{deviceCount} {t('devices')}</span>
           </div>
         </header>
 
@@ -239,12 +239,12 @@ export default function DialogView() {
         {/* Files Grid */}
         <section className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <h2 className="text-xl font-display font-semibold text-foreground">
-            Files ({files.length})
+            {t('files')} ({files.length})
           </h2>
           
           {files.length === 0 ? (
             <div className="text-center py-16 bg-card rounded-xl border border-border">
-              <p className="text-muted-foreground">No files yet. Upload something!</p>
+              <p className="text-muted-foreground">{t('noFiles')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

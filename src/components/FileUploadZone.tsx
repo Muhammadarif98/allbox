@@ -3,6 +3,7 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatFileSize, MAX_FILE_SIZE } from '@/lib/fileUtils';
 import { Progress } from '@/components/ui/progress';
+import { t } from '@/lib/i18n';
 
 interface FileUploadZoneProps {
   onUpload: (files: File[]) => Promise<void>;
@@ -44,7 +45,6 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
     setUploading(true);
     setProgress(0);
 
-    // Simulate progress while uploading
     const progressInterval = setInterval(() => {
       setProgress(prev => Math.min(prev + 10, 90));
     }, 200);
@@ -71,7 +71,7 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     processFiles(e.target.files);
-    e.target.value = ''; // Reset for same file selection
+    e.target.value = '';
   };
 
   return (
@@ -99,10 +99,10 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
 
         <div>
           <p className="font-display font-semibold text-foreground">
-            {uploading ? 'Uploading...' : isDragging ? 'Drop files here' : 'Drag & drop files'}
+            {uploading ? t('uploading') : isDragging ? t('dropHere') : t('dragDrop')}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
-            or click to browse • Max {formatFileSize(MAX_FILE_SIZE)} per file
+            {t('clickBrowse')} • {t('maxSize', { size: formatFileSize(MAX_FILE_SIZE) })}
           </p>
         </div>
 
@@ -115,7 +115,6 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
         />
       </div>
 
-      {/* Progress Bar */}
       {uploading && (
         <div className="space-y-1">
           <Progress value={progress} className="h-2" />
@@ -123,7 +122,6 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
           <X className="w-4 h-4 text-destructive flex-shrink-0" />
