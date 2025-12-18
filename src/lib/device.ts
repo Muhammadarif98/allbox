@@ -7,6 +7,7 @@ export interface StoredDialog {
   dialogId: string;
   deviceLabel: string;
   accessedAt: string;
+  name?: string;
 }
 
 // Generate or retrieve persistent device ID
@@ -31,7 +32,7 @@ export function getStoredDialogs(): StoredDialog[] {
 }
 
 // Add a dialog to this device's memory
-export function addStoredDialog(dialogId: string, deviceLabel: string): void {
+export function addStoredDialog(dialogId: string, deviceLabel: string, name?: string): void {
   const dialogs = getStoredDialogs();
   const existing = dialogs.findIndex(d => d.dialogId === dialogId);
   
@@ -39,9 +40,12 @@ export function addStoredDialog(dialogId: string, deviceLabel: string): void {
     dialogId,
     deviceLabel,
     accessedAt: new Date().toISOString(),
+    name,
   };
   
   if (existing >= 0) {
+    // Keep the name if not provided
+    newDialog.name = name || dialogs[existing].name;
     dialogs[existing] = newDialog;
   } else {
     dialogs.push(newDialog);
@@ -61,6 +65,13 @@ export function getDeviceLabelForDialog(dialogId: string): string | null {
   const dialogs = getStoredDialogs();
   const dialog = dialogs.find(d => d.dialogId === dialogId);
   return dialog?.deviceLabel || null;
+}
+
+// Get dialog name
+export function getDialogName(dialogId: string): string | null {
+  const dialogs = getStoredDialogs();
+  const dialog = dialogs.find(d => d.dialogId === dialogId);
+  return dialog?.name || null;
 }
 
 // Remove a dialog from device memory

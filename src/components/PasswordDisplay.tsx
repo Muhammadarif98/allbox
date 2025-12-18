@@ -6,10 +6,11 @@ import { cn } from '@/lib/utils';
 
 interface PasswordDisplayProps {
   password: string;
+  dialogName?: string;
   onConfirm: () => void;
 }
 
-export function PasswordDisplay({ password, onConfirm }: PasswordDisplayProps) {
+export function PasswordDisplay({ password, dialogName, onConfirm }: PasswordDisplayProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -25,6 +26,13 @@ export function PasswordDisplay({ password, onConfirm }: PasswordDisplayProps) {
         <div className="w-16 h-16 mx-auto bg-accent/20 rounded-full flex items-center justify-center">
           <AlertTriangle className="w-8 h-8 text-accent" />
         </div>
+
+        {/* Dialog Name */}
+        {dialogName && (
+          <p className="text-xl font-display font-bold text-accent">
+            "{dialogName}"
+          </p>
+        )}
 
         {/* Title */}
         <div className="space-y-2">
