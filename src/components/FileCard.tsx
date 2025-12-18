@@ -3,6 +3,7 @@ import { formatFileSize, getFileIcon, isImageFile } from '@/lib/fileUtils';
 import { t, getLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface FileCardProps {
   id: string;
@@ -47,17 +48,33 @@ export function FileCard({
   isDeleting 
 }: FileCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const FileIcon = getFileIcon(fileName);
   const showThumbnail = isImageFile(fileName) && !imageError;
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download error:', err);
+      toast.error(t('downloadFailed'));
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -95,13 +112,17 @@ export function FileCard({
         </p>
       </div>
 
-      {/* Actions */}
       <div className="flex border-t border-border">
         <button
           onClick={handleDownload}
-          className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors"
+          disabled={downloading}
+          className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors disabled:opacity-50"
         >
-          <Download className="w-4 h-4" />
+          {downloading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
           <span>{t('download')}</span>
         </button>
         <div className="w-px bg-border" />
