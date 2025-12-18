@@ -1,8 +1,8 @@
-import { Download, Trash2, Loader2 } from 'lucide-react';
-import { formatFileSize, getFileIcon, isImageFile } from '@/lib/fileUtils';
+import { Download, Trash2, Loader2, Play } from 'lucide-react';
+import { formatFileSize, getFileIcon, isImageFile, isVideoFile, isAudioFile, getFileExtension } from '@/lib/fileUtils';
 import { t, getLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface FileCardProps {
@@ -37,6 +37,100 @@ function formatDateLocalized(dateString: string): string {
   });
 }
 
+// Video thumbnail component
+function VideoThumbnail({ fileUrl, fileName }: { fileUrl: string; fileName: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoadedData = () => {
+      video.currentTime = 0.1; // Seek to get first frame
+    };
+
+    const handleSeeked = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0);
+          setThumbnail(canvas.toDataURL('image/jpeg', 0.8));
+        }
+      } catch (e) {
+        setError(true);
+      }
+    };
+
+    const handleError = () => setError(true);
+
+    video.addEventListener('loadeddata', handleLoadedData);
+    video.addEventListener('seeked', handleSeeked);
+    video.addEventListener('error', handleError);
+
+    return () => {
+      video.removeEventListener('loadeddata', handleLoadedData);
+      video.removeEventListener('seeked', handleSeeked);
+      video.removeEventListener('error', handleError);
+    };
+  }, [fileUrl]);
+
+  if (error) {
+    return <FileIconWithExt fileName={fileName} />;
+  }
+
+  return (
+    <>
+      <video ref={videoRef} src={fileUrl} className="hidden" crossOrigin="anonymous" preload="metadata" />
+      {thumbnail ? (
+        <div className="relative w-full h-full">
+          <img src={thumbnail} alt={fileName} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <Play className="w-10 h-10 text-white fill-white/80" />
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center w-full h-full">
+          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+        </div>
+      )}
+    </>
+  );
+}
+
+// File icon with extension badge
+function FileIconWithExt({ fileName }: { fileName: string }) {
+  const FileIcon = getFileIcon(fileName);
+  const ext = getFileExtension(fileName);
+  
+  return (
+    <div className="relative flex flex-col items-center justify-center gap-2">
+      <FileIcon className="w-14 h-14 text-muted-foreground/60" />
+      <span className="px-2 py-0.5 bg-secondary/30 rounded text-xs font-medium text-secondary uppercase">
+        {ext}
+      </span>
+    </div>
+  );
+}
+
+// Audio preview with music icon
+function AudioPreview({ fileName }: { fileName: string }) {
+  return (
+    <div className="relative flex flex-col items-center justify-center gap-2">
+      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary/40 to-accent/40 flex items-center justify-center">
+        <Play className="w-8 h-8 text-secondary ml-1" />
+      </div>
+      <span className="px-2 py-0.5 bg-secondary/30 rounded text-xs font-medium text-secondary uppercase">
+        {getFileExtension(fileName)}
+      </span>
+    </div>
+  );
+}
+
 export function FileCard({ 
   id, 
   fileName, 
@@ -49,8 +143,10 @@ export function FileCard({
 }: FileCardProps) {
   const [imageError, setImageError] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const FileIcon = getFileIcon(fileName);
-  const showThumbnail = isImageFile(fileName) && !imageError;
+  
+  const isImage = isImageFile(fileName);
+  const isVideo = isVideoFile(fileName);
+  const isAudio = isAudioFile(fileName);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -77,6 +173,29 @@ export function FileCard({
     }
   };
 
+  const renderPreview = () => {
+    if (isImage && !imageError) {
+      return (
+        <img
+          src={fileUrl}
+          alt={fileName}
+          className="w-full h-full object-cover"
+          onError={() => setImageError(true)}
+        />
+      );
+    }
+    
+    if (isVideo) {
+      return <VideoThumbnail fileUrl={fileUrl} fileName={fileName} />;
+    }
+    
+    if (isAudio) {
+      return <AudioPreview fileName={fileName} />;
+    }
+    
+    return <FileIconWithExt fileName={fileName} />;
+  };
+
   return (
     <div className={cn(
       "bg-card rounded-xl border border-border overflow-hidden",
@@ -86,16 +205,7 @@ export function FileCard({
     )}>
       {/* Thumbnail / Icon Area */}
       <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
-        {showThumbnail ? (
-          <img
-            src={fileUrl}
-            alt={fileName}
-            className="w-full h-full object-cover"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <FileIcon className="w-16 h-16 text-muted-foreground/50" />
-        )}
+        {renderPreview()}
       </div>
 
       {/* Info */}

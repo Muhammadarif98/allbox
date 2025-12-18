@@ -67,4 +67,18 @@ export function isImageFile(fileName: string): boolean {
   return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
 }
 
+export function isVideoFile(fileName: string): boolean {
+  const ext = fileName.split('.').pop()?.toLowerCase() || '';
+  return ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv'].includes(ext);
+}
+
+export function isAudioFile(fileName: string): boolean {
+  const ext = fileName.split('.').pop()?.toLowerCase() || '';
+  return ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'].includes(ext);
+}
+
+export function getFileExtension(fileName: string): string {
+  return fileName.split('.').pop()?.toUpperCase() || '';
+}
+
 export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
