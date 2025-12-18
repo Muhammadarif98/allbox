@@ -6,7 +6,7 @@ import { FileCard } from '@/components/FileCard';
 import { FileUploadZone } from '@/components/FileUploadZone';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
-import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog } from '@/lib/device';
+import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName } from '@/lib/device';
 import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
 
@@ -27,6 +27,7 @@ export default function DialogView() {
   const [deviceCount, setDeviceCount] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deviceLabel, setDeviceLabel] = useState<string>('');
+  const [dialogName, setDialogName] = useState<string>('');
   const [, setRefresh] = useState(0);
 
   const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
@@ -45,6 +46,9 @@ export default function DialogView() {
 
     const label = getDeviceLabelForDialog(dialogId);
     if (label) setDeviceLabel(label);
+
+    const storedName = getDialogName(dialogId);
+    if (storedName) setDialogName(storedName);
 
     loadData();
     
@@ -88,8 +92,22 @@ export default function DialogView() {
 
   const loadData = async () => {
     setLoading(true);
-    await Promise.all([loadFiles(), loadDeviceCount()]);
+    await Promise.all([loadFiles(), loadDeviceCount(), loadDialogName()]);
     setLoading(false);
+  };
+
+  const loadDialogName = async () => {
+    if (!dialogId) return;
+    
+    const { data } = await supabase
+      .from('dialogs')
+      .select('name')
+      .eq('id', dialogId)
+      .maybeSingle();
+    
+    if (data?.name) {
+      setDialogName(data.name);
+    }
   };
 
   const loadFiles = async () => {
@@ -155,7 +173,7 @@ export default function DialogView() {
       }
     }
     
-    addStoredDialog(dialogId, currentLabel);
+    addStoredDialog(dialogId, currentLabel, dialogName);
     toast.success(t('uploadSuccess', { n: uploadedFiles.length }));
   };
 
@@ -217,7 +235,7 @@ export default function DialogView() {
             </Button>
             <div>
               <h1 className="text-2xl font-display font-bold text-foreground">
-                {t('dialog')} #{dialogId?.slice(0, 8)}
+                {dialogName || t('dialog')}
               </h1>
               <p className="text-sm text-muted-foreground">
                 {t('youAre')} {deviceLabel}

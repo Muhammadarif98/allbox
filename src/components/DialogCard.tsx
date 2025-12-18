@@ -1,15 +1,37 @@
 import { Folder, ChevronRight } from 'lucide-react';
-import { formatDate } from '@/lib/fileUtils';
 import { cn } from '@/lib/utils';
+import { t, getLanguage } from '@/lib/i18n';
 
 interface DialogCardProps {
   dialogId: string;
+  dialogName?: string;
   deviceLabel: string;
   accessedAt: string;
   onClick: () => void;
 }
 
-export function DialogCard({ dialogId, deviceLabel, accessedAt, onClick }: DialogCardProps) {
+function formatDateLocalized(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return t('justNow');
+  if (diffMins < 60) return t('minutesAgo', { n: diffMins });
+  if (diffHours < 24) return t('hoursAgo', { n: diffHours });
+  if (diffDays < 7) return t('daysAgo', { n: diffDays });
+  
+  const lang = getLanguage();
+  return date.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+  });
+}
+
+export function DialogCard({ dialogId, dialogName, deviceLabel, accessedAt, onClick }: DialogCardProps) {
   return (
     <button
       onClick={onClick}
@@ -29,10 +51,10 @@ export function DialogCard({ dialogId, deviceLabel, accessedAt, onClick }: Dialo
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="font-display font-semibold text-foreground truncate">
-          Dialog #{dialogId.slice(0, 8)}
+          {dialogName || `Dialog #${dialogId.slice(0, 8)}`}
         </p>
         <p className="text-sm text-muted-foreground">
-          {deviceLabel} • {formatDate(accessedAt)}
+          {deviceLabel} • {formatDateLocalized(accessedAt)}
         </p>
       </div>
 

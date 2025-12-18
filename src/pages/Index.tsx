@@ -14,7 +14,8 @@ import {
   generatePassword, 
   hashPassword 
 } from '@/lib/device';
-import { t } from '@/lib/i18n';
+import { getRandomDialogName } from '@/lib/dialogNames';
+import { t, getLanguage } from '@/lib/i18n';
 import { toast } from 'sonner';
 
 export default function Index() {
@@ -24,6 +25,7 @@ export default function Index() {
   const [showPasswordScreen, setShowPasswordScreen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [newDialogId, setNewDialogId] = useState('');
+  const [newDialogName, setNewDialogName] = useState('');
   const [, setRefresh] = useState(0);
   
   const storedDialogs = getStoredDialogs();
@@ -36,10 +38,11 @@ export default function Index() {
     try {
       const password = generatePassword();
       const passwordHash = await hashPassword(password);
+      const dialogName = getRandomDialogName(getLanguage());
       
       const { data: dialog, error } = await supabase
         .from('dialogs')
-        .insert({ password_hash: passwordHash })
+        .insert({ password_hash: passwordHash, name: dialogName })
         .select()
         .single();
       
@@ -61,10 +64,11 @@ export default function Index() {
           device_label: deviceLabel
         });
       
-      addStoredDialog(dialog.id, deviceLabel);
+      addStoredDialog(dialog.id, deviceLabel, dialogName);
       
       setNewPassword(password);
       setNewDialogId(dialog.id);
+      setNewDialogName(dialogName);
       setShowPasswordScreen(true);
     } catch (err) {
       console.error('Error creating dialog:', err);
@@ -85,7 +89,7 @@ export default function Index() {
       
       const { data: dialogs, error } = await supabase
         .from('dialogs')
-        .select('id')
+        .select('id, name')
         .eq('password_hash', passwordHash);
       
       if (error) throw error;
@@ -122,7 +126,7 @@ export default function Index() {
           });
       }
       
-      addStoredDialog(dialog.id, deviceLabel);
+      addStoredDialog(dialog.id, deviceLabel, dialog.name);
       
       setEnterModalOpen(false);
       navigate(`/dialog/${dialog.id}`);
@@ -143,6 +147,7 @@ export default function Index() {
         <LanguageSwitcher onChange={forceRefresh} />
         <PasswordDisplay 
           password={newPassword} 
+          dialogName={newDialogName}
           onConfirm={handlePasswordConfirmed} 
         />
       </>
@@ -209,6 +214,7 @@ export default function Index() {
                   <DialogCard
                     key={dialog.dialogId}
                     dialogId={dialog.dialogId}
+                    dialogName={dialog.name}
                     deviceLabel={dialog.deviceLabel}
                     accessedAt={dialog.accessedAt}
                     onClick={() => handleOpenDialog(dialog.dialogId)}
