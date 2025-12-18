@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, LogIn, Box, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogCard } from '@/components/DialogCard';
 import { EnterDialogModal } from '@/components/EnterDialogModal';
 import { PasswordDisplay } from '@/components/PasswordDisplay';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   getDeviceId, 
@@ -13,6 +14,7 @@ import {
   generatePassword, 
   hashPassword 
 } from '@/lib/device';
+import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
 
 export default function Index() {
@@ -22,8 +24,11 @@ export default function Index() {
   const [showPasswordScreen, setShowPasswordScreen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [newDialogId, setNewDialogId] = useState('');
+  const [, setRefresh] = useState(0);
   
   const storedDialogs = getStoredDialogs();
+
+  const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
 
   const handleCreateDialog = async () => {
     setCreatingDialog(true);
@@ -32,7 +37,6 @@ export default function Index() {
       const password = generatePassword();
       const passwordHash = await hashPassword(password);
       
-      // Create dialog in database
       const { data: dialog, error } = await supabase
         .from('dialogs')
         .insert({ password_hash: passwordHash })
@@ -41,7 +45,6 @@ export default function Index() {
       
       if (error) throw error;
       
-      // Register this device
       const deviceId = getDeviceId();
       const { data: existingDevices } = await supabase
         .from('dialog_devices')
@@ -58,16 +61,14 @@ export default function Index() {
           device_label: deviceLabel
         });
       
-      // Store in localStorage
       addStoredDialog(dialog.id, deviceLabel);
       
-      // Show password screen
       setNewPassword(password);
       setNewDialogId(dialog.id);
       setShowPasswordScreen(true);
     } catch (err) {
       console.error('Error creating dialog:', err);
-      toast.error('Failed to create dialog');
+      toast.error(t('createFailed'));
     } finally {
       setCreatingDialog(false);
     }
@@ -82,7 +83,6 @@ export default function Index() {
     try {
       const passwordHash = await hashPassword(password);
       
-      // Find dialog with matching password
       const { data: dialogs, error } = await supabase
         .from('dialogs')
         .select('id')
@@ -94,7 +94,6 @@ export default function Index() {
       const dialog = dialogs[0];
       const deviceId = getDeviceId();
       
-      // Check if device already registered
       const { data: existingDevice } = await supabase
         .from('dialog_devices')
         .select('device_label')
@@ -107,7 +106,6 @@ export default function Index() {
       if (existingDevice) {
         deviceLabel = existingDevice.device_label;
       } else {
-        // Register new device
         const { data: allDevices } = await supabase
           .from('dialog_devices')
           .select('device_label')
@@ -124,7 +122,6 @@ export default function Index() {
           });
       }
       
-      // Store in localStorage
       addStoredDialog(dialog.id, deviceLabel);
       
       setEnterModalOpen(false);
@@ -140,18 +137,22 @@ export default function Index() {
     navigate(`/dialog/${dialogId}`);
   };
 
-  // Show password screen if creating
   if (showPasswordScreen) {
     return (
-      <PasswordDisplay 
-        password={newPassword} 
-        onConfirm={handlePasswordConfirmed} 
-      />
+      <>
+        <LanguageSwitcher onChange={forceRefresh} />
+        <PasswordDisplay 
+          password={newPassword} 
+          onConfirm={handlePasswordConfirmed} 
+        />
+      </>
     );
   }
 
   return (
     <div className="min-h-screen p-6 md:p-10">
+      <LanguageSwitcher onChange={forceRefresh} />
+      
       <div className="max-w-2xl mx-auto space-y-10">
         {/* Header */}
         <header className="text-center space-y-4 animate-fade-in">
@@ -160,12 +161,11 @@ export default function Index() {
               <Box className="w-8 h-8 text-accent" />
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground">
-              AllBox
+              {t('appName')}
             </h1>
           </div>
           <p className="text-muted-foreground text-lg max-w-md mx-auto">
-            Share files through password-protected dialogs. 
-            No registration required.
+            {t('tagline')}
           </p>
         </header>
 
@@ -182,7 +182,7 @@ export default function Index() {
             ) : (
               <Plus className="w-6 h-6 mr-2" />
             )}
-            Create New Dialog
+            {t('createDialog')}
           </Button>
 
           <Button
@@ -192,7 +192,7 @@ export default function Index() {
             className="h-20 border-2 border-secondary bg-transparent hover:bg-secondary/20 text-secondary font-display font-semibold text-lg rounded-xl transition-all"
           >
             <LogIn className="w-6 h-6 mr-2" />
-            Enter Dialog
+            {t('enterDialog')}
           </Button>
         </div>
 
@@ -200,7 +200,7 @@ export default function Index() {
         {storedDialogs.length > 0 && (
           <section className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <h2 className="text-xl font-display font-semibold text-foreground">
-              My Dialogs
+              {t('myDialogs')}
             </h2>
             <div className="space-y-3">
               {storedDialogs
@@ -220,11 +220,10 @@ export default function Index() {
 
         {/* Footer */}
         <footer className="text-center text-sm text-muted-foreground/50 pt-8">
-          <p>Files are stored securely. Max 100MB per file.</p>
+          <p>{t('footer')}</p>
         </footer>
       </div>
 
-      {/* Enter Dialog Modal */}
       <EnterDialogModal
         open={enterModalOpen}
         onOpenChange={setEnterModalOpen}

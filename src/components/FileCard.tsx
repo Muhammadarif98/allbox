@@ -1,5 +1,6 @@
 import { Download, Trash2, Loader2 } from 'lucide-react';
-import { formatFileSize, formatDate, getFileIcon, isImageFile } from '@/lib/fileUtils';
+import { formatFileSize, getFileIcon, isImageFile } from '@/lib/fileUtils';
+import { t, getLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
@@ -12,6 +13,27 @@ interface FileCardProps {
   fileUrl: string;
   onDelete: (id: string) => void;
   isDeleting?: boolean;
+}
+
+function formatDateLocalized(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return t('justNow');
+  if (diffMins < 60) return t('minutesAgo', { n: diffMins });
+  if (diffHours < 24) return t('hoursAgo', { n: diffHours });
+  if (diffDays < 7) return t('daysAgo', { n: diffDays });
+  
+  const lang = getLanguage();
+  return date.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+  });
 }
 
 export function FileCard({ 
@@ -69,7 +91,7 @@ export function FileCard({
           <span>{deviceLabel}</span>
         </div>
         <p className="text-xs text-muted-foreground/70">
-          {formatDate(uploadedAt)}
+          {formatDateLocalized(uploadedAt)}
         </p>
       </div>
 
@@ -80,7 +102,7 @@ export function FileCard({
           className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors"
         >
           <Download className="w-4 h-4" />
-          <span>Download</span>
+          <span>{t('download')}</span>
         </button>
         <div className="w-px bg-border" />
         <button
@@ -93,7 +115,7 @@ export function FileCard({
           ) : (
             <Trash2 className="w-4 h-4" />
           )}
-          <span>Delete</span>
+          <span>{t('delete')}</span>
         </button>
       </div>
     </div>

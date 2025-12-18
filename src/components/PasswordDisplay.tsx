@@ -1,6 +1,7 @@
 import { AlertTriangle, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 interface PasswordDisplayProps {
@@ -28,11 +29,10 @@ export function PasswordDisplay({ password, onConfirm }: PasswordDisplayProps) {
         {/* Title */}
         <div className="space-y-2">
           <h1 className="text-2xl font-display font-bold text-foreground">
-            Save Your Password
+            {t('savePassword')}
           </h1>
           <p className="text-muted-foreground text-sm">
-            This is the <span className="text-accent font-semibold">only time</span> you'll see this password. 
-            Save it somewhere safe!
+            {t('saveWarning', { onlyTime: t('onlyTime') })}
           </p>
         </div>
 
@@ -71,8 +71,7 @@ export function PasswordDisplay({ password, onConfirm }: PasswordDisplayProps) {
         {/* Warning Message */}
         <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
           <p className="text-sm text-destructive font-medium">
-            ⚠️ This password will NOT be shown again. 
-            Anyone with this password can access your dialog.
+            ⚠️ {t('passwordWarning')}
           </p>
         </div>
 
@@ -82,7 +81,7 @@ export function PasswordDisplay({ password, onConfirm }: PasswordDisplayProps) {
           size="lg"
           className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-lg py-6 rounded-xl transition-all hover:shadow-glow"
         >
-          I've Saved It
+          {t('savedIt')}
         </Button>
       </div>
     </div>
