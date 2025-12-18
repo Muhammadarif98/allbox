@@ -1,0 +1,91 @@
+import { useState } from 'react';
+import { X, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { PasswordInput } from '@/components/PasswordInput';
+import { cn } from '@/lib/utils';
+
+interface EnterDialogModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onEnter: (password: string) => Promise<boolean>;
+}
+
+export function EnterDialogModal({ open, onOpenChange, onEnter }: EnterDialogModalProps) {
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const handleEnter = async (pwd?: string) => {
+    const passwordToUse = pwd || password;
+    if (passwordToUse.length !== 4) return;
+    
+    setLoading(true);
+    setError(false);
+    
+    const success = await onEnter(passwordToUse);
+    
+    if (!success) {
+      setError(true);
+      setPassword('');
+    }
+    
+    setLoading(false);
+  };
+
+  const handleClose = () => {
+    setPassword('');
+    setError(false);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="bg-card border-border max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center font-display text-2xl text-foreground">
+            Enter Dialog
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          <p className="text-center text-muted-foreground">
+            Enter the 4-digit password to access the dialog
+          </p>
+
+          <PasswordInput
+            value={password}
+            onChange={(v) => {
+              setPassword(v);
+              setError(false);
+            }}
+            onComplete={handleEnter}
+            disabled={loading}
+            error={error}
+          />
+
+          {error && (
+            <p className="text-center text-destructive text-sm animate-fade-in">
+              Wrong password. Please try again.
+            </p>
+          )}
+
+          <Button
+            onClick={() => handleEnter()}
+            disabled={password.length !== 4 || loading}
+            className={cn(
+              "w-full bg-accent hover:bg-accent/90 text-accent-foreground",
+              "font-semibold py-6 rounded-xl transition-all"
+            )}
+          >
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              'Enter Dialog'
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
