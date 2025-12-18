@@ -142,17 +142,27 @@ export default function DialogView() {
     if (!dialogId) return;
     
     const currentLabel = getDeviceLabelForDialog(dialogId) || 'Unknown';
+    let successCount = 0;
     
     for (const file of uploadedFiles) {
-      const filePath = `${dialogId}/${Date.now()}-${file.name}`;
+      // Sanitize filename - remove special characters that might cause issues
+      const sanitizedName = file.name.replace(/[^\w\s.-]/g, '_');
+      const filePath = `${dialogId}/${Date.now()}-${sanitizedName}`;
+      
+      // Determine content type - use file.type or default to binary
+      const contentType = file.type || 'application/octet-stream';
       
       const { error: uploadError } = await supabase.storage
         .from('dialog-files')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          contentType: contentType,
+          cacheControl: '3600',
+          upsert: false
+        });
       
       if (uploadError) {
-        console.error('Upload error:', uploadError);
-        toast.error(t('uploadFailed', { name: file.name }));
+        console.error('Upload error:', uploadError.message, uploadError);
+        toast.error(`${file.name}: ${uploadError.message}`);
         continue;
       }
       
@@ -160,21 +170,27 @@ export default function DialogView() {
         .from('files')
         .insert({
           dialog_id: dialogId,
-          file_name: file.name,
+          file_name: file.name, // Keep original name for display
           file_size: file.size,
           file_path: filePath,
           device_label: currentLabel
         });
       
       if (dbError) {
-        console.error('DB error:', dbError);
+        console.error('DB error:', dbError.message, dbError);
         toast.error(t('saveFailed', { name: file.name }));
+        // Try to clean up the uploaded file
+        await supabase.storage.from('dialog-files').remove([filePath]);
         continue;
       }
+      
+      successCount++;
     }
     
-    addStoredDialog(dialogId, currentLabel, dialogName);
-    toast.success(t('uploadSuccess', { n: uploadedFiles.length }));
+    if (successCount > 0) {
+      addStoredDialog(dialogId, currentLabel, dialogName);
+      toast.success(t('uploadSuccess', { n: successCount }));
+    }
   };
 
   const handleDelete = async (fileId: string) => {
