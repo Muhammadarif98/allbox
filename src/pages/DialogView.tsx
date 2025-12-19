@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Loader2 } from 'lucide-react';
+import { ArrowLeft, Users, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FileCard } from '@/components/FileCard';
+import { MessageCard } from '@/components/MessageCard';
 import { FileUploadZone } from '@/components/FileUploadZone';
+import { MessageInput } from '@/components/MessageInput';
+import { MediaPlayer } from '@/components/MediaPlayer';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName } from '@/lib/device';
@@ -19,16 +22,35 @@ interface FileRecord {
   uploaded_at: string;
 }
 
+interface MessageRecord {
+  id: string;
+  content: string | null;
+  voice_path: string | null;
+  voice_duration: number | null;
+  message_type: 'text' | 'voice';
+  device_label: string;
+  created_at: string;
+}
+
+interface MediaState {
+  url: string;
+  fileName: string;
+  type: 'image' | 'video' | 'audio';
+}
+
 export default function DialogView() {
   const { dialogId } = useParams<{ dialogId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [files, setFiles] = useState<FileRecord[]>([]);
+  const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [deviceCount, setDeviceCount] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deviceLabel, setDeviceLabel] = useState<string>('');
   const [dialogName, setDialogName] = useState<string>('');
+  const [dialogPassword, setDialogPassword] = useState<string>('');
   const [, setRefresh] = useState(0);
+  const [mediaPlayer, setMediaPlayer] = useState<MediaState | null>(null);
 
   const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
 
@@ -68,6 +90,22 @@ export default function DialogView() {
       )
       .subscribe();
 
+    const messagesChannel = supabase
+      .channel(`messages-${dialogId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `dialog_id=eq.${dialogId}`
+        },
+        () => {
+          loadMessages();
+        }
+      )
+      .subscribe();
+
     const devicesChannel = supabase
       .channel(`devices-${dialogId}`)
       .on(
@@ -86,13 +124,14 @@ export default function DialogView() {
 
     return () => {
       supabase.removeChannel(filesChannel);
+      supabase.removeChannel(messagesChannel);
       supabase.removeChannel(devicesChannel);
     };
   }, [dialogId, navigate]);
 
   const loadData = async () => {
     setLoading(true);
-    await Promise.all([loadFiles(), loadDeviceCount(), loadDialogName()]);
+    await Promise.all([loadFiles(), loadMessages(), loadDeviceCount(), loadDialogName()]);
     setLoading(false);
   };
 
@@ -127,6 +166,23 @@ export default function DialogView() {
     setFiles(data || []);
   };
 
+  const loadMessages = async () => {
+    if (!dialogId) return;
+    
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('dialog_id', dialogId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error loading messages:', error);
+      return;
+    }
+    
+    setMessages((data || []) as MessageRecord[]);
+  };
+
   const loadDeviceCount = async () => {
     if (!dialogId) return;
     
@@ -145,11 +201,8 @@ export default function DialogView() {
     let successCount = 0;
     
     for (const file of uploadedFiles) {
-      // Sanitize filename - remove special characters that might cause issues
       const sanitizedName = file.name.replace(/[^\w\s.-]/g, '_');
       const filePath = `${dialogId}/${Date.now()}-${sanitizedName}`;
-      
-      // Determine content type - use file.type or default to binary
       const contentType = file.type || 'application/octet-stream';
       
       const { error: uploadError } = await supabase.storage
@@ -170,7 +223,7 @@ export default function DialogView() {
         .from('files')
         .insert({
           dialog_id: dialogId,
-          file_name: file.name, // Keep original name for display
+          file_name: file.name,
           file_size: file.size,
           file_path: filePath,
           device_label: currentLabel
@@ -179,7 +232,6 @@ export default function DialogView() {
       if (dbError) {
         console.error('DB error:', dbError.message, dbError);
         toast.error(t('saveFailed', { name: file.name }));
-        // Try to clean up the uploaded file
         await supabase.storage.from('dialog-files').remove([filePath]);
         continue;
       }
@@ -193,7 +245,7 @@ export default function DialogView() {
     }
   };
 
-  const handleDelete = async (fileId: string) => {
+  const handleDeleteFile = async (fileId: string) => {
     const file = files.find(f => f.id === fileId);
     if (!file) return;
     
@@ -218,11 +270,116 @@ export default function DialogView() {
     }
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    const message = messages.find(m => m.id === messageId);
+    if (!message) return;
+    
+    setDeletingId(messageId);
+    
+    try {
+      if (message.voice_path) {
+        await supabase.storage
+          .from('dialog-files')
+          .remove([message.voice_path]);
+      }
+      
+      await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId);
+      
+      toast.success(t('messageDeleted'));
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast.error(t('deleteFailed'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleSendText = async (text: string) => {
+    if (!dialogId) return;
+    
+    const currentLabel = getDeviceLabelForDialog(dialogId) || 'Unknown';
+    
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        dialog_id: dialogId,
+        device_label: currentLabel,
+        content: text,
+        message_type: 'text'
+      });
+    
+    if (error) {
+      console.error('Send error:', error);
+      toast.error(t('messageFailed'));
+    }
+  };
+
+  const handleSendVoice = async (blob: Blob, duration: number) => {
+    if (!dialogId) return;
+    
+    const currentLabel = getDeviceLabelForDialog(dialogId) || 'Unknown';
+    const voicePath = `${dialogId}/voice-${Date.now()}.webm`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('dialog-files')
+      .upload(voicePath, blob, {
+        contentType: 'audio/webm',
+        cacheControl: '3600'
+      });
+    
+    if (uploadError) {
+      console.error('Voice upload error:', uploadError);
+      toast.error(t('messageFailed'));
+      return;
+    }
+    
+    const { error: dbError } = await supabase
+      .from('messages')
+      .insert({
+        dialog_id: dialogId,
+        device_label: currentLabel,
+        voice_path: voicePath,
+        voice_duration: duration,
+        message_type: 'voice'
+      });
+    
+    if (dbError) {
+      console.error('Voice save error:', dbError);
+      await supabase.storage.from('dialog-files').remove([voicePath]);
+      toast.error(t('messageFailed'));
+    }
+  };
+
   const getFileUrl = (filePath: string) => {
     const { data } = supabase.storage
       .from('dialog-files')
       .getPublicUrl(filePath);
     return data.publicUrl;
+  };
+
+  const handlePlayMedia = (url: string, fileName: string, type: 'image' | 'video' | 'audio') => {
+    setMediaPlayer({ url, fileName, type });
+  };
+
+  const handleDownloadPassword = () => {
+    // Get password from localStorage (stored dialogs)
+    const storedDialogs = JSON.parse(localStorage.getItem('allbox_dialogs') || '[]');
+    const dialog = storedDialogs.find((d: any) => d.dialogId === dialogId);
+    
+    // Create file with dialog name and password info
+    const content = `${dialogName || t('dialog')}\n\nDialog ID: ${dialogId}\n\nNote: Password was shown only once during dialog creation.`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${dialogName || 'dialog'}-info.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -259,16 +416,61 @@ export default function DialogView() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-lg">
-            <Users className="w-4 h-4" />
-            <span>{deviceCount} {t('devices')}</span>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handleDownloadPassword}
+              variant="outline"
+              size="sm"
+              className="text-muted-foreground"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {t('downloadPassword')}
+            </Button>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-lg">
+              <Users className="w-4 h-4" />
+              <span>{deviceCount} {t('devices')}</span>
+            </div>
           </div>
         </header>
+
+        {/* Message Input */}
+        <section className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
+          <MessageInput 
+            onSendText={handleSendText}
+            onSendVoice={handleSendVoice}
+          />
+        </section>
 
         {/* Upload Zone */}
         <section className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <FileUploadZone onUpload={handleUpload} />
         </section>
+
+        {/* Messages */}
+        {messages.length > 0 && (
+          <section className="space-y-4 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+            <h2 className="text-xl font-display font-semibold text-foreground">
+              {t('messages')} ({messages.length})
+            </h2>
+            
+            <div className="space-y-3">
+              {messages.map((message) => (
+                <MessageCard
+                  key={message.id}
+                  id={message.id}
+                  content={message.content || undefined}
+                  voiceUrl={message.voice_path ? getFileUrl(message.voice_path) : undefined}
+                  voiceDuration={message.voice_duration || undefined}
+                  messageType={message.message_type}
+                  deviceLabel={message.device_label}
+                  createdAt={message.created_at}
+                  onDelete={handleDeleteMessage}
+                  isDeleting={deletingId === message.id}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Files Grid */}
         <section className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -291,7 +493,8 @@ export default function DialogView() {
                   deviceLabel={file.device_label}
                   uploadedAt={file.uploaded_at}
                   fileUrl={getFileUrl(file.file_path)}
-                  onDelete={handleDelete}
+                  onDelete={handleDeleteFile}
+                  onPlay={handlePlayMedia}
                   isDeleting={deletingId === file.id}
                 />
               ))}
@@ -299,6 +502,16 @@ export default function DialogView() {
           )}
         </section>
       </div>
+
+      {/* Media Player Modal */}
+      {mediaPlayer && (
+        <MediaPlayer
+          url={mediaPlayer.url}
+          fileName={mediaPlayer.fileName}
+          type={mediaPlayer.type}
+          onClose={() => setMediaPlayer(null)}
+        />
+      )}
     </div>
   );
 }
