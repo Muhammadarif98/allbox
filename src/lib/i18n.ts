@@ -10,7 +10,7 @@ export const translations = {
     createDialog: 'Create New Dialog',
     enterDialog: 'Enter Dialog',
     myDialogs: 'My Dialogs',
-    footer: 'Files are stored securely. Max 100MB per file.',
+    footer: 'Files are stored securely. Max 500MB per file.',
     
     // Password screen
     savePassword: 'Save Your Password',
@@ -18,6 +18,7 @@ export const translations = {
     saveWarning: "This is the {onlyTime} you'll see this password. Save it somewhere safe!",
     passwordWarning: "This password will NOT be shown again. Anyone with this password can access your dialog.",
     savedIt: "I've Saved It",
+    downloadPassword: 'Download Password',
     
     // Enter dialog modal
     enterDialogTitle: 'Enter Dialog',
@@ -30,7 +31,9 @@ export const translations = {
     youAre: 'You are',
     devices: 'device(s)',
     files: 'Files',
+    messages: 'Messages',
     noFiles: 'No files yet. Upload something!',
+    noMessages: 'No messages yet. Send something!',
     dragDrop: 'Drag & drop files',
     clickBrowse: 'or click to browse',
     maxSize: 'Max {size} per file',
@@ -44,16 +47,28 @@ export const translations = {
     minutesAgo: '{n}m ago',
     hoursAgo: '{n}h ago',
     daysAgo: '{n}d ago',
+    play: 'Play',
+    
+    // Messages
+    typeMessage: 'Type a message...',
+    recording: 'Recording',
+    copy: 'Copy',
+    copied: 'Copied!',
+    copyFailed: 'Failed to copy',
+    newContent: 'New content available',
     
     // Toasts
     uploadSuccess: 'Uploaded {n} file(s)',
     uploadFailed: 'Failed to upload {name}',
     saveFailed: 'Failed to save {name}',
     fileDeleted: 'File deleted',
+    messageDeleted: 'Message deleted',
     deleteFailed: 'Failed to delete file',
     downloadFailed: 'Failed to download file',
     createFailed: 'Failed to create dialog',
     noAccess: "You don't have access to this dialog",
+    messageSent: 'Message sent',
+    messageFailed: 'Failed to send message',
   },
   ru: {
     // Homepage
@@ -62,7 +77,7 @@ export const translations = {
     createDialog: 'Создать диалог',
     enterDialog: 'Войти в диалог',
     myDialogs: 'Мои диалоги',
-    footer: 'Файлы хранятся безопасно. Максимум 100МБ на файл.',
+    footer: 'Файлы хранятся безопасно. Максимум 500МБ на файл.',
     
     // Password screen
     savePassword: 'Сохраните пароль',
@@ -70,6 +85,7 @@ export const translations = {
     saveWarning: 'Это {onlyTime}, когда вы видите этот пароль. Сохраните его!',
     passwordWarning: 'Этот пароль больше НЕ будет показан. Любой с этим паролем может войти в диалог.',
     savedIt: 'Я сохранил',
+    downloadPassword: 'Скачать пароль',
     
     // Enter dialog modal
     enterDialogTitle: 'Войти в диалог',
@@ -82,7 +98,9 @@ export const translations = {
     youAre: 'Вы',
     devices: 'устройств(а)',
     files: 'Файлы',
+    messages: 'Сообщения',
     noFiles: 'Пока нет файлов. Загрузите что-нибудь!',
+    noMessages: 'Пока нет сообщений. Напишите что-нибудь!',
     dragDrop: 'Перетащите файлы',
     clickBrowse: 'или нажмите для выбора',
     maxSize: 'Макс. {size} на файл',
@@ -96,16 +114,28 @@ export const translations = {
     minutesAgo: '{n} мин. назад',
     hoursAgo: '{n} ч. назад',
     daysAgo: '{n} дн. назад',
+    play: 'Воспроизвести',
+    
+    // Messages
+    typeMessage: 'Введите сообщение...',
+    recording: 'Запись',
+    copy: 'Копировать',
+    copied: 'Скопировано!',
+    copyFailed: 'Не удалось скопировать',
+    newContent: 'Доступен новый контент',
     
     // Toasts
     uploadSuccess: 'Загружено {n} файл(ов)',
     uploadFailed: 'Не удалось загрузить {name}',
     saveFailed: 'Не удалось сохранить {name}',
     fileDeleted: 'Файл удалён',
+    messageDeleted: 'Сообщение удалено',
     deleteFailed: 'Не удалось удалить файл',
     downloadFailed: 'Не удалось скачать файл',
     createFailed: 'Не удалось создать диалог',
     noAccess: 'У вас нет доступа к этому диалогу',
+    messageSent: 'Сообщение отправлено',
+    messageFailed: 'Не удалось отправить сообщение',
   },
 };
 

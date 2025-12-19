@@ -1,4 +1,4 @@
-import { Download, Trash2, Loader2, Play } from 'lucide-react';
+import { Download, Trash2, Loader2, Play, Eye } from 'lucide-react';
 import { formatFileSize, getFileIcon, isImageFile, isVideoFile, isAudioFile, getFileExtension } from '@/lib/fileUtils';
 import { t, getLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ interface FileCardProps {
   uploadedAt: string;
   fileUrl: string;
   onDelete: (id: string) => void;
+  onPlay?: (url: string, fileName: string, type: 'image' | 'video' | 'audio') => void;
   isDeleting?: boolean;
 }
 
@@ -139,6 +140,7 @@ export function FileCard({
   uploadedAt, 
   fileUrl, 
   onDelete,
+  onPlay,
   isDeleting 
 }: FileCardProps) {
   const [imageError, setImageError] = useState(false);
@@ -147,6 +149,7 @@ export function FileCard({
   const isImage = isImageFile(fileName);
   const isVideo = isVideoFile(fileName);
   const isAudio = isAudioFile(fileName);
+  const isPlayable = isImage || isVideo || isAudio;
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -170,6 +173,19 @@ export function FileCard({
       toast.error(t('downloadFailed'));
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handlePlay = () => {
+    if (!onPlay) return;
+    if (isImage) onPlay(fileUrl, fileName, 'image');
+    else if (isVideo) onPlay(fileUrl, fileName, 'video');
+    else if (isAudio) onPlay(fileUrl, fileName, 'audio');
+  };
+
+  const handleCardClick = () => {
+    if (isPlayable && onPlay) {
+      handlePlay();
     }
   };
 
@@ -204,8 +220,19 @@ export function FileCard({
       isDeleting && "opacity-50 pointer-events-none"
     )}>
       {/* Thumbnail / Icon Area */}
-      <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+      <div 
+        className={cn(
+          "aspect-square bg-muted flex items-center justify-center overflow-hidden relative",
+          isPlayable && onPlay && "cursor-pointer"
+        )}
+        onClick={handleCardClick}
+      >
         {renderPreview()}
+        {isPlayable && onPlay && (
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <Eye className="w-8 h-8 text-white" />
+          </div>
+        )}
       </div>
 
       {/* Info */}
@@ -223,18 +250,28 @@ export function FileCard({
       </div>
 
       <div className="flex border-t border-border">
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors disabled:opacity-50"
-        >
-          {downloading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Download className="w-4 h-4" />
-          )}
-          <span>{t('download')}</span>
-        </button>
+        {isPlayable && onPlay ? (
+          <button
+            onClick={handlePlay}
+            className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors"
+          >
+            <Play className="w-4 h-4" />
+            <span>{t('play')}</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors disabled:opacity-50"
+          >
+            {downloading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            <span>{t('download')}</span>
+          </button>
+        )}
         <div className="w-px bg-border" />
         <button
           onClick={() => onDelete(id)}

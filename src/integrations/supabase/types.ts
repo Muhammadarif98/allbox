@@ -105,6 +105,47 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          device_label: string
+          dialog_id: string
+          id: string
+          message_type: string
+          voice_duration: number | null
+          voice_path: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          device_label: string
+          dialog_id: string
+          id?: string
+          message_type: string
+          voice_duration?: number | null
+          voice_path?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          device_label?: string
+          dialog_id?: string
+          id?: string
+          message_type?: string
+          voice_duration?: number | null
+          voice_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_dialog_id_fkey"
+            columns: ["dialog_id"]
+            isOneToOne: false
+            referencedRelation: "dialogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

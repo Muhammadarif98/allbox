@@ -1,4 +1,4 @@
-import { AlertTriangle, Copy, Check } from 'lucide-react';
+import { AlertTriangle, Copy, Check, Download } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { t } from '@/lib/i18n';
@@ -17,6 +17,19 @@ export function PasswordDisplay({ password, dialogName, onConfirm }: PasswordDis
     await navigator.clipboard.writeText(password);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const content = `${dialogName || 'Dialog'}\n\nPassword: ${password}\n\nKeep this file safe!`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${dialogName || 'dialog'}-password.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -82,6 +95,16 @@ export function PasswordDisplay({ password, dialogName, onConfirm }: PasswordDis
             ⚠️ {t('passwordWarning')}
           </p>
         </div>
+
+        {/* Download Password Button */}
+        <Button
+          onClick={handleDownload}
+          variant="outline"
+          className="w-full"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          {t('downloadPassword')}
+        </Button>
 
         {/* Confirm Button */}
         <Button
