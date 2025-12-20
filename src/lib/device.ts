@@ -43,11 +43,11 @@ export function getTheme(): Theme {
 
 export function setTheme(theme: Theme): void {
   localStorage.setItem(THEME_KEY, theme);
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark');
-    document.documentElement.classList.remove('light');
-  } else {
+  if (theme === 'light') {
+    document.documentElement.classList.add('light');
     document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.classList.add('dark');
     document.documentElement.classList.remove('light');
   }
 }
