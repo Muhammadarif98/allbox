@@ -81,4 +81,4 @@ export function getFileExtension(fileName: string): string {
   return fileName.split('.').pop()?.toUpperCase() || '';
 }
 
-export const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+export const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
