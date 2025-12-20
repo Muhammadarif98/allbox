@@ -10,7 +10,10 @@ export const translations = {
     createDialog: 'Create New Dialog',
     enterDialog: 'Enter Dialog',
     myDialogs: 'My Dialogs',
-    footer: 'Files are stored securely. Max 500MB per file.',
+    archivedDialogs: 'Archived Dialogs',
+    footer: 'Files are stored securely. Max 2GB per file.',
+    searchDialogs: 'Search dialogs...',
+    noArchivedDialogs: 'No archived dialogs',
     
     // Password screen
     savePassword: 'Save Your Password',
@@ -19,6 +22,7 @@ export const translations = {
     passwordWarning: "This password will NOT be shown again. Anyone with this password can access your dialog.",
     savedIt: "I've Saved It",
     downloadPassword: 'Download Password',
+    dialogCode: 'Dialog Code',
     
     // Enter dialog modal
     enterDialogTitle: 'Enter Dialog',
@@ -39,6 +43,23 @@ export const translations = {
     maxSize: 'Max {size} per file',
     uploading: 'Uploading...',
     dropHere: 'Drop files here',
+    editName: 'Edit name',
+    saveName: 'Save',
+    cancelEdit: 'Cancel',
+    exitDialog: 'Exit to Archive',
+    exitDialogConfirm: 'Are you sure you want to exit? Dialog will be moved to archive.',
+    leaveDialog: 'Leave Completely',
+    leaveDialogConfirm: 'Are you sure you want to leave completely? You can rejoin with password.',
+    restoreDialog: 'Restore',
+    
+    // Device settings
+    deviceName: 'Device Name',
+    editDeviceName: 'Edit device name',
+    deviceNamePlaceholder: 'Enter device name',
+    
+    // Theme
+    lightTheme: 'Light',
+    darkTheme: 'Dark',
     
     // File card
     download: 'Download',
@@ -69,6 +90,11 @@ export const translations = {
     noAccess: "You don't have access to this dialog",
     messageSent: 'Message sent',
     messageFailed: 'Failed to send message',
+    dialogRenamed: 'Dialog renamed',
+    dialogExited: 'Dialog moved to archive',
+    dialogLeft: 'Left dialog completely',
+    dialogRestored: 'Dialog restored',
+    deviceNameUpdated: 'Device name updated',
   },
   ru: {
     // Homepage
@@ -77,7 +103,10 @@ export const translations = {
     createDialog: 'Создать диалог',
     enterDialog: 'Войти в диалог',
     myDialogs: 'Мои диалоги',
-    footer: 'Файлы хранятся безопасно. Максимум 500МБ на файл.',
+    archivedDialogs: 'Архив диалогов',
+    footer: 'Файлы хранятся безопасно. Максимум 2ГБ на файл.',
+    searchDialogs: 'Поиск диалогов...',
+    noArchivedDialogs: 'Нет архивных диалогов',
     
     // Password screen
     savePassword: 'Сохраните пароль',
@@ -86,6 +115,7 @@ export const translations = {
     passwordWarning: 'Этот пароль больше НЕ будет показан. Любой с этим паролем может войти в диалог.',
     savedIt: 'Я сохранил',
     downloadPassword: 'Скачать пароль',
+    dialogCode: 'Код диалога',
     
     // Enter dialog modal
     enterDialogTitle: 'Войти в диалог',
@@ -106,6 +136,23 @@ export const translations = {
     maxSize: 'Макс. {size} на файл',
     uploading: 'Загрузка...',
     dropHere: 'Отпустите файлы здесь',
+    editName: 'Изменить',
+    saveName: 'Сохранить',
+    cancelEdit: 'Отмена',
+    exitDialog: 'В архив',
+    exitDialogConfirm: 'Вы уверены? Диалог будет перемещён в архив.',
+    leaveDialog: 'Покинуть полностью',
+    leaveDialogConfirm: 'Вы уверены? Вы можете войти снова по паролю.',
+    restoreDialog: 'Восстановить',
+    
+    // Device settings
+    deviceName: 'Имя устройства',
+    editDeviceName: 'Изменить имя устройства',
+    deviceNamePlaceholder: 'Введите имя устройства',
+    
+    // Theme
+    lightTheme: 'Светлая',
+    darkTheme: 'Тёмная',
     
     // File card
     download: 'Скачать',
@@ -136,6 +183,11 @@ export const translations = {
     noAccess: 'У вас нет доступа к этому диалогу',
     messageSent: 'Сообщение отправлено',
     messageFailed: 'Не удалось отправить сообщение',
+    dialogRenamed: 'Диалог переименован',
+    dialogExited: 'Диалог перемещён в архив',
+    dialogLeft: 'Вы покинули диалог',
+    dialogRestored: 'Диалог восстановлен',
+    deviceNameUpdated: 'Имя устройства обновлено',
   },
 };
 

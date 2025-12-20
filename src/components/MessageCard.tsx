@@ -1,4 +1,4 @@
-import { Copy, Trash2, Loader2, Play, Pause } from 'lucide-react';
+import { Copy, Trash2, Loader2, Play, Pause, Download } from 'lucide-react';
 import { t, getLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useState, useRef } from 'react';
@@ -56,6 +56,7 @@ export function MessageCard({
 }: MessageCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [downloading, setDownloading] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handleCopy = async () => {
@@ -89,6 +90,32 @@ export function MessageCard({
   const handleEnded = () => {
     setIsPlaying(false);
     setCurrentTime(0);
+  };
+
+  const handleDownloadVoice = async () => {
+    if (!voiceUrl) return;
+    setDownloading(true);
+    try {
+      const response = await fetch(voiceUrl);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `voice-${id}.webm`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download error:', err);
+      toast.error(t('downloadFailed'));
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -154,7 +181,18 @@ export function MessageCard({
             <span>{t('copy')}</span>
           </button>
         ) : (
-          <div className="flex-1" />
+          <button
+            onClick={handleDownloadVoice}
+            disabled={downloading}
+            className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors disabled:opacity-50"
+          >
+            {downloading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            <span>{t('download')}</span>
+          </button>
         )}
         <div className="w-px bg-border" />
         <button

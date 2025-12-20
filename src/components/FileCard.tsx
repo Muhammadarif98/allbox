@@ -49,7 +49,7 @@ function VideoThumbnail({ fileUrl, fileName }: { fileUrl: string; fileName: stri
     if (!video) return;
 
     const handleLoadedData = () => {
-      video.currentTime = 0.1; // Seek to get first frame
+      video.currentTime = 0.1;
     };
 
     const handleSeeked = () => {
@@ -250,28 +250,19 @@ export function FileCard({
       </div>
 
       <div className="flex border-t border-border">
-        {isPlayable && onPlay ? (
-          <button
-            onClick={handlePlay}
-            className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors"
-          >
-            <Play className="w-4 h-4" />
-            <span>{t('play')}</span>
-          </button>
-        ) : (
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors disabled:opacity-50"
-          >
-            {downloading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
-            <span>{t('download')}</span>
-          </button>
-        )}
+        {/* Always show download button */}
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors disabled:opacity-50"
+        >
+          {downloading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          <span>{t('download')}</span>
+        </button>
         <div className="w-px bg-border" />
         <button
           onClick={() => onDelete(id)}

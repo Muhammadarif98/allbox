@@ -20,7 +20,7 @@ export function PasswordDisplay({ password, dialogName, onConfirm }: PasswordDis
   };
 
   const handleDownload = () => {
-    const content = `${dialogName || 'Dialog'}\n\nPassword: ${password}\n\nKeep this file safe!`;
+    const content = `${dialogName || 'Dialog'}\n\n${t('dialogCode')}: ${password}\n\nKeep this file safe!`;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -56,6 +56,11 @@ export function PasswordDisplay({ password, dialogName, onConfirm }: PasswordDis
             {t('saveWarning', { onlyTime: t('onlyTime') })}
           </p>
         </div>
+
+        {/* 4-digit code label */}
+        <p className="text-sm text-muted-foreground font-medium">
+          {t('dialogCode')}:
+        </p>
 
         {/* Password Display */}
         <div className="relative">
