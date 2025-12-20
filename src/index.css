@@ -54,47 +54,47 @@
   }
 
   .dark {
-    /* Dark Theme (Original) */
+    /* Dark Theme - Based on Raisin Black palette */
     --primary: 0 0% 15%;
     --primary-foreground: 42 62% 78%;
 
-    --background: 20 27% 8%;
+    --background: 0 0% 15%;  /* Raisin Black #272727 */
     --foreground: 42 62% 78%;
 
-    --card: 20 27% 12%;
+    --card: 0 0% 18%;  /* Чуть светлее основного фона */
     --card-foreground: 42 62% 78%;
 
-    --popover: 20 27% 12%;
+    --popover: 0 0% 18%;
     --popover-foreground: 42 62% 78%;
 
-    --secondary: 33 50% 66%;
+    --secondary: 28 27% 66%;  /* Buff #D4AA7D */
     --secondary-foreground: 0 0% 15%;
 
-    --muted: 20 20% 18%;
-    --muted-foreground: 33 30% 60%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 28 27% 55%;
 
-    --accent: 42 72% 78%;
+    --accent: 33 76% 69%;  /* Sunset #EFDD9E */
     --accent-foreground: 0 0% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 33 30% 25%;
-    --input: 33 30% 25%;
-    --ring: 42 72% 78%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 33 76% 69%;
 
-    --sidebar-background: 20 27% 10%;
+    --sidebar-background: 0 0% 12%;  /* Темнее основного фона */
     --sidebar-foreground: 42 62% 78%;
-    --sidebar-primary: 42 72% 78%;
+    --sidebar-primary: 33 76% 69%;
     --sidebar-primary-foreground: 0 0% 15%;
-    --sidebar-accent: 33 50% 66%;
+    --sidebar-accent: 28 27% 66%;
     --sidebar-accent-foreground: 0 0% 15%;
-    --sidebar-border: 33 30% 25%;
-    --sidebar-ring: 42 72% 78%;
+    --sidebar-border: 0 0% 25%;
+    --sidebar-ring: 33 76% 69%;
 
-    --gradient-bg: linear-gradient(135deg, hsl(20 27% 8%) 0%, hsl(25 35% 15%) 100%);
-    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-glow: 0 0 20px hsla(42, 72%, 78%, 0.15);
+    --gradient-bg: linear-gradient(135deg, hsl(0 0% 15%) 0%, hsl(0 0% 20%) 100%);
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 20px hsla(33, 76%, 69%, 0.15);
   }
 }
 
