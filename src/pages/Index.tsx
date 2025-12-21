@@ -159,9 +159,19 @@ export default function Index() {
           dialog_id: dialog.id,
           device_id: deviceId,
           device_label: deviceLabel
+        });                                    // ← Строка 167
+      
+      // ← ДОБАВИТЬ СЮДА (после строки 167, перед строкой 169):
+      await supabase
+        .from('messages')
+        .insert({
+          dialog_id: dialog.id,
+          device_label: 'System',
+          content: `Dialog Password: ${password}\n\nKeep this password safe!`,
+          message_type: 'text'
         });
       
-      addStoredDialog(dialog.id, deviceLabel, dialogName);
+      addStoredDialog(dialog.id, deviceLabel, dialogName);  // ← Строка 169
       
       setNewPassword(password);
       setNewDialogId(dialog.id);
