@@ -34,7 +34,7 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
     
     for (const file of Array.from(files)) {
       if (file.size > MAX_FILE_SIZE) {
-        setError(`${file.name} exceeds 500MB limit`);
+        setError(`${file.name} exceeds ${formatFileSize(MAX_FILE_SIZE)} limit`);
         continue;
       }
       validFiles.push(file);
