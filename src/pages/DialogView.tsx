@@ -193,15 +193,15 @@ export default function DialogView() {
   const handlePlayMedia = (url: string, fileName: string, type: 'image' | 'video' | 'audio') => setMediaPlayer({ url, fileName, type });
 
   const handleDownloadPassword = () => {
-    const content = `${dialogName || t('dialog')}\n\n${t('dialogCode')}: ****\n\nDialog ID: ${dialogId?.slice(0, 8)}`;
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${dialogName || 'dialog'}-info.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
+  const content = `${dialogName || t('dialog')}\n\nDialog ID: ${dialogId}\n\nPassword was shown only once during creation.\nIf you lost it, you cannot recover it.`;
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${dialogName || 'dialog'}-info.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
   const handleExitDialog = () => {
     if (!dialogId) return;
