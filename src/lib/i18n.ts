@@ -104,7 +104,7 @@ export const translations = {
     enterDialog: 'Войти в диалог',
     myDialogs: 'Мои диалоги',
     archivedDialogs: 'Архив диалогов',
-    footer: 'Файлы хранятся безопасно. Максимум 2ГБ на файл.',
+    footer: 'Файлы хранятся безопасно. Максимум 100 МБ на файл.',
     searchDialogs: 'Поиск диалогов...',
     noArchivedDialogs: 'Нет архивных диалогов',
     
