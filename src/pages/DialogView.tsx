@@ -243,7 +243,6 @@ export default function DialogView() {
           </div>
           
           <div className="flex items-center gap-3 flex-wrap">
-            <Button onClick={handleDownloadPassword} variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />{t('downloadPassword')}</Button>
             <Button onClick={handleExitDialog} variant="outline" size="sm" className="text-destructive border-destructive/50 hover:bg-destructive/10"><LogOut className="w-4 h-4 mr-2" />{t('exitDialog')}</Button>
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-lg"><Users className="w-4 h-4" /><span>{deviceCount} {t('devices')}</span></div>
           </div>
