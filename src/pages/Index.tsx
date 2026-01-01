@@ -20,7 +20,8 @@ import {
   hashPassword,
   initTheme,
   getDeviceName,
-  updateStoredDialogName
+  updateStoredDialogName,
+  savePasswordForDialog
 } from '@/lib/device';
 import { getRandomDialogName } from '@/lib/dialogNames';
 import { t, getLanguage } from '@/lib/i18n';
@@ -172,6 +173,9 @@ export default function Index() {
       
       addStoredDialog(dialog.id, deviceLabel, dialogName);
       
+      // Save password for later download
+      savePasswordForDialog(dialog.id, password);
+      
       setNewPassword(password);
       setNewDialogId(dialog.id);
       setNewDialogName(dialogName);
@@ -252,8 +256,10 @@ export default function Index() {
   if (showPasswordScreen) {
     return (
       <>
-        <div className="fixed top-4 right-4 flex items-center gap-2 z-50">
+        <div className="fixed top-4 left-4 z-50">
           <ThemeSwitcher onChange={forceRefresh} />
+        </div>
+        <div className="fixed top-4 right-4 z-50">
           <LanguageSwitcher onChange={forceRefresh} />
         </div>
         <PasswordDisplay 
@@ -267,8 +273,10 @@ export default function Index() {
 
   return (
     <div className="min-h-screen p-6 md:p-10">
-      <div className="fixed top-4 right-4 flex items-center gap-2 z-50">
+      <div className="fixed top-4 left-4 z-50">
         <ThemeSwitcher onChange={forceRefresh} />
+      </div>
+      <div className="fixed top-4 right-4 z-50">
         <LanguageSwitcher onChange={forceRefresh} />
       </div>
       

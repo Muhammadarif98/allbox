@@ -104,18 +104,20 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
   }
 
-  .dark body {
-    background: linear-gradient(135deg, hsl(20 27% 8%) 0%, hsl(25 35% 15%) 100%);
+  /* Light theme background */
+  body {
+    background: linear-gradient(135deg, hsl(42 30% 96%) 0%, hsl(42 25% 92%) 100%);
   }
 
-  .light body,
-  :root body {
-    background: linear-gradient(135deg, hsl(42 30% 96%) 0%, hsl(42 25% 92%) 100%);
+  /* Dark theme background - must override */
+  .dark body,
+  html.dark body {
+    background: linear-gradient(135deg, hsl(20 27% 8%) 0%, hsl(25 35% 15%) 100%) !important;
   }
 
   h1, h2, h3, h4, h5, h6 {

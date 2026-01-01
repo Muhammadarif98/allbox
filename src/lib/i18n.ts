@@ -11,7 +11,7 @@ export const translations = {
     enterDialog: 'Enter Dialog',
     myDialogs: 'My Dialogs',
     archivedDialogs: 'Archived Dialogs',
-    footer: 'Files are stored securely. Max 2GB per file.',
+    footer: 'Files are stored securely. Max 1GB per file.',
     searchDialogs: 'Search dialogs...',
     noArchivedDialogs: 'No archived dialogs',
     
@@ -70,6 +70,11 @@ export const translations = {
     daysAgo: '{n}d ago',
     play: 'Play',
     
+    // Password download in dialog
+    password: 'Password',
+    enterCodeToAccess: 'Enter this code to access the dialog.',
+    passwordNotAvailable: 'Password not available (only available if you created this dialog)',
+    
     // Messages
     typeMessage: 'Type a message...',
     recording: 'Recording',
@@ -104,7 +109,7 @@ export const translations = {
     enterDialog: 'Войти в диалог',
     myDialogs: 'Мои диалоги',
     archivedDialogs: 'Архив диалогов',
-    footer: 'Файлы хранятся безопасно. Максимум 100 МБ на файл.',
+    footer: 'Файлы хранятся безопасно. Максимум 1 ГБ на файл.',
     searchDialogs: 'Поиск диалогов...',
     noArchivedDialogs: 'Нет архивных диалогов',
     
@@ -162,6 +167,11 @@ export const translations = {
     hoursAgo: '{n} ч. назад',
     daysAgo: '{n} дн. назад',
     play: 'Воспроизвести',
+    
+    // Password download in dialog
+    password: 'Пароль',
+    enterCodeToAccess: 'Введите этот код для доступа к диалогу.',
+    passwordNotAvailable: 'Пароль недоступен (доступен только если вы создали этот диалог)',
     
     // Messages
     typeMessage: 'Введите сообщение...',

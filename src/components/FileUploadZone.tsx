@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatFileSize, MAX_FILE_SIZE } from '@/lib/fileUtils';
@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { t } from '@/lib/i18n';
 
 interface FileUploadZoneProps {
-  onUpload: (files: File[]) => Promise<void>;
+  onUpload: (files: File[], onProgress?: (progress: number) => void) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -15,6 +15,7 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [currentFileName, setCurrentFileName] = useState<string>('');
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -45,20 +46,32 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
     setUploading(true);
     setProgress(0);
 
-    const progressInterval = setInterval(() => {
-      setProgress(prev => Math.min(prev + 10, 90));
-    }, 200);
-
     try {
-      await onUpload(validFiles);
+      // Track progress for all files
+      let totalBytes = validFiles.reduce((sum, f) => sum + f.size, 0);
+      let uploadedBytes = 0;
+      
+      for (const file of validFiles) {
+        setCurrentFileName(file.name);
+        const fileProgress = (uploadedBytes / totalBytes) * 100;
+        setProgress(Math.round(fileProgress));
+        
+        await onUpload([file], (filePercent) => {
+          const overallProgress = ((uploadedBytes + (file.size * filePercent / 100)) / totalBytes) * 100;
+          setProgress(Math.round(overallProgress));
+        });
+        
+        uploadedBytes += file.size;
+      }
+      
       setProgress(100);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
-      clearInterval(progressInterval);
       setTimeout(() => {
         setUploading(false);
         setProgress(0);
+        setCurrentFileName('');
       }, 500);
     }
   };
@@ -99,7 +112,7 @@ export function FileUploadZone({ onUpload, disabled }: FileUploadZoneProps) {
 
         <div>
           <p className="font-display font-semibold text-foreground">
-            {uploading ? t('uploading') : isDragging ? t('dropHere') : t('dragDrop')}
+            {uploading ? (currentFileName ? `${t('uploading')} ${currentFileName}` : t('uploading')) : isDragging ? t('dropHere') : t('dragDrop')}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
             {t('clickBrowse')} • {t('maxSize', { size: formatFileSize(MAX_FILE_SIZE) })}
