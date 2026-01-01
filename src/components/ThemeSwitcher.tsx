@@ -26,21 +26,21 @@ export function ThemeSwitcher({ onChange }: ThemeSwitcherProps) {
     <button
       onClick={toggleTheme}
       className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors",
+        "flex items-center justify-center p-2 sm:px-3 sm:py-2 rounded-lg transition-colors",
         "bg-card hover:bg-muted border border-border",
-        "text-sm text-foreground"
+        "text-sm text-foreground min-w-[40px] sm:min-w-0"
       )}
       title={theme === 'dark' ? t('lightTheme') : t('darkTheme')}
     >
       {theme === 'dark' ? (
         <>
           <Sun className="w-4 h-4" />
-          <span className="hidden sm:inline">{t('lightTheme')}</span>
+          <span className="hidden sm:inline ml-2">{t('lightTheme')}</span>
         </>
       ) : (
         <>
           <Moon className="w-4 h-4" />
-          <span className="hidden sm:inline">{t('darkTheme')}</span>
+          <span className="hidden sm:inline ml-2">{t('darkTheme')}</span>
         </>
       )}
     </button>
