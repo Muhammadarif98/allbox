@@ -20,19 +20,17 @@ export function PasswordDisplay({ password, dialogName, onConfirm }: PasswordDis
   };
 
   const handleDownload = () => {
-  const handleDownload = () => {
-  alert('Password: ' + password); // ← ЭТУ ОДНУ СТРОКУ ДОБАВИТЬ
-  const content = `${dialogName || 'Dialog'}\n\n${t('dialogCode')}: ${password}\n\nKeep this file safe!`;
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${dialogName || 'dialog'}-password.txt`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
+    const content = `${dialogName || 'Dialog'}\n\n${t('dialogCode')}: ${password}\n\nKeep this file safe!`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${dialogName || 'dialog'}-password.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 animate-fade-in">
@@ -64,7 +62,7 @@ export function PasswordDisplay({ password, dialogName, onConfirm }: PasswordDis
           {t('dialogCode')}:
         </p>
 
-        {/* Password Display */}
+        {/* Password Display - SHOW ACTUAL DIGITS */}
         <div className="relative">
           <div className="flex justify-center gap-3">
             {password.split('').map((digit, i) => (
