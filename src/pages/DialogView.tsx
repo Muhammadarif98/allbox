@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Loader2, Edit3, Check, X, LogOut } from 'lucide-react';
+import { ArrowLeft, Users, Loader2, Edit3, Check, X, LogOut, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FileCard } from '@/components/FileCard';
@@ -11,9 +11,10 @@ import { MediaPlayer } from '@/components/MediaPlayer';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { supabase } from '@/integrations/supabase/client';
-import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName } from '@/lib/device';
+import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getPasswordForDialog } from '@/lib/device';
 import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
+import { uploadFileWithProgress } from '@/lib/uploadHelper';
 
 interface FileRecord {
   id: string;
@@ -165,7 +166,7 @@ export default function DialogView() {
     setIsEditingName(false);
   };
 
-  const handleUpload = async (uploadedFiles: File[]) => {
+  const handleUpload = async (uploadedFiles: File[], onProgress?: (progress: number) => void) => {
     if (!dialogId) return;
     // Use custom device name if set
     const customName = getDeviceName();
@@ -176,14 +177,33 @@ export default function DialogView() {
     for (const file of uploadedFiles) {
       const sanitizedName = file.name.replace(/[^\w\s.-]/g, '_');
       const filePath = `${dialogId}/${Date.now()}-${sanitizedName}`;
-      const { error: uploadError } = await supabase.storage.from('dialog-files').upload(filePath, file, { contentType: file.type || 'application/octet-stream' });
-      if (uploadError) { toast.error(`${file.name}: ${uploadError.message}`); continue; }
       
-      const { error: dbError } = await supabase.from('files').insert({ dialog_id: dialogId, file_name: file.name, file_size: file.size, file_path: filePath, device_label: currentLabel });
-      if (dbError) { await supabase.storage.from('dialog-files').remove([filePath]); continue; }
+      // Use custom upload with progress for large files
+      const result = await uploadFileWithProgress(file, 'dialog-files', filePath, onProgress);
+      
+      if (!result.success) { 
+        toast.error(`${file.name}: ${result.error}`); 
+        continue; 
+      }
+      
+      const { error: dbError } = await supabase.from('files').insert({ 
+        dialog_id: dialogId, 
+        file_name: file.name, 
+        file_size: file.size, 
+        file_path: filePath, 
+        device_label: currentLabel 
+      });
+      
+      if (dbError) { 
+        await supabase.storage.from('dialog-files').remove([filePath]); 
+        continue; 
+      }
       successCount++;
     }
-    if (successCount > 0) { addStoredDialog(dialogId, currentLabel, dialogName); toast.success(t('uploadSuccess', { n: successCount })); }
+    if (successCount > 0) { 
+      addStoredDialog(dialogId, currentLabel, dialogName); 
+      toast.success(t('uploadSuccess', { n: successCount })); 
+    }
   };
 
   const handleDeleteFile = async (fileId: string) => {
@@ -248,10 +268,28 @@ export default function DialogView() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 text-accent animate-spin" /></div>;
 
+  const handleDownloadPassword = () => {
+    const password = getPasswordForDialog(dialogId || '');
+    if (!password) {
+      toast.error(t('passwordNotAvailable'));
+      return;
+    }
+    const content = `${t('appName')} - ${dialogName || t('dialog')}\n\n${t('password')}: ${password}\n\n${t('enterCodeToAccess')}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${dialogName || 'dialog'}-password.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen p-6 md:p-10">
-      <div className="fixed top-4 right-4 flex items-center gap-2 z-50">
+      <div className="fixed top-4 left-4 z-50">
         <ThemeSwitcher onChange={forceRefresh} />
+      </div>
+      <div className="fixed top-4 right-4 z-50">
         <LanguageSwitcher onChange={forceRefresh} />
       </div>
       
@@ -277,6 +315,7 @@ export default function DialogView() {
           </div>
           
           <div className="flex items-center gap-3 flex-wrap">
+            <Button onClick={handleDownloadPassword} variant="outline" size="sm" className="text-secondary border-secondary/50 hover:bg-secondary/10"><Download className="w-4 h-4 mr-2" />{t('downloadPassword')}</Button>
             <Button onClick={handleExitDialog} variant="outline" size="sm" className="text-destructive border-destructive/50 hover:bg-destructive/10"><LogOut className="w-4 h-4 mr-2" />{t('exitDialog')}</Button>
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-lg"><Users className="w-4 h-4" /><span>{deviceCount} {t('devices')}</span></div>
           </div>

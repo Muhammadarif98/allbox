@@ -5,6 +5,7 @@ const DIALOGS_KEY = 'allbox_dialogs';
 const ARCHIVED_KEY = 'allbox_archived';
 const DEVICE_NAME_KEY = 'allbox_device_name';
 const THEME_KEY = 'allbox_theme';
+const PASSWORDS_KEY = 'allbox_passwords';
 
 export type Theme = 'dark' | 'light';
 
@@ -196,6 +197,30 @@ export function removeStoredDialog(dialogId: string): void {
 // Generate a random 4-digit password
 export function generatePassword(): string {
   return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
+// Save password for a dialog (only at creation time)
+export function savePasswordForDialog(dialogId: string, password: string): void {
+  const passwords = getStoredPasswords();
+  passwords[dialogId] = password;
+  localStorage.setItem(PASSWORDS_KEY, JSON.stringify(passwords));
+}
+
+// Get password for a dialog (only if saved)
+export function getPasswordForDialog(dialogId: string): string | null {
+  const passwords = getStoredPasswords();
+  return passwords[dialogId] || null;
+}
+
+// Get all stored passwords
+function getStoredPasswords(): Record<string, string> {
+  const stored = localStorage.getItem(PASSWORDS_KEY);
+  if (!stored) return {};
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return {};
+  }
 }
 
 // Simple hash function for password (client-side)
