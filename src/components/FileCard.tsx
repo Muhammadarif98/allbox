@@ -1,4 +1,4 @@
-import { Download, Trash2, Loader2, Play, Eye } from 'lucide-react';
+import { Download, Trash2, Loader2, Play, Eye, Send } from 'lucide-react';
 import { formatFileSize, getFileIcon, isImageFile, isVideoFile, isAudioFile, getFileExtension } from '@/lib/fileUtils';
 import { t, getLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -12,8 +12,10 @@ interface FileCardProps {
   deviceLabel: string;
   uploadedAt: string;
   fileUrl: string;
+  filePath: string;
   onDelete: (id: string) => void;
   onPlay?: (url: string, fileName: string, type: 'image' | 'video' | 'audio') => void;
+  onForward?: (id: string) => void;
   isDeleting?: boolean;
 }
 
@@ -138,9 +140,11 @@ export function FileCard({
   fileSize, 
   deviceLabel, 
   uploadedAt, 
-  fileUrl, 
+  fileUrl,
+  filePath,
   onDelete,
   onPlay,
+  onForward,
   isDeleting 
 }: FileCardProps) {
   const [imageError, setImageError] = useState(false);
@@ -250,7 +254,20 @@ export function FileCard({
       </div>
 
       <div className="flex border-t border-border">
-        {/* Always show download button */}
+        {/* Forward button */}
+        {onForward && (
+          <>
+            <button
+              onClick={() => onForward(id)}
+              className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-foreground hover:bg-secondary/20 transition-colors"
+            >
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('forward')}</span>
+            </button>
+            <div className="w-px bg-border" />
+          </>
+        )}
+        {/* Download button */}
         <button
           onClick={handleDownload}
           disabled={downloading}
@@ -261,7 +278,7 @@ export function FileCard({
           ) : (
             <Download className="w-4 h-4" />
           )}
-          <span>{t('download')}</span>
+          <span className="hidden sm:inline">{t('download')}</span>
         </button>
         <div className="w-px bg-border" />
         <button
@@ -274,7 +291,7 @@ export function FileCard({
           ) : (
             <Trash2 className="w-4 h-4" />
           )}
-          <span>{t('delete')}</span>
+          <span className="hidden sm:inline">{t('delete')}</span>
         </button>
       </div>
     </div>
