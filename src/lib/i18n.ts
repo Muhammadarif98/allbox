@@ -80,9 +80,18 @@ export const translations = {
     forwardTo: 'Forward to',
     selectDialog: 'Select dialog',
     noDialogsToForward: 'No other dialogs available',
+    noOtherDialogs: 'No other dialogs available',
     messageForwarded: 'Message forwarded',
     forwardFailed: 'Failed to forward message',
     forwardedFrom: 'Forwarded from',
+    forwardFile: 'Forward File',
+    fileForwarded: 'File forwarded',
+    
+    // Password verification
+    enterPassword: 'Please enter 4-digit password',
+    verifyFailed: 'Verification failed',
+    enterPasswordToDownload: 'Enter Password to Download',
+    verifyPasswordForDialog: 'Verify password for dialog',
     
     // Messages
     typeMessage: 'Type a message...',
@@ -187,9 +196,18 @@ export const translations = {
     forwardTo: 'Переслать в',
     selectDialog: 'Выберите диалог',
     noDialogsToForward: 'Нет других диалогов',
+    noOtherDialogs: 'Нет других диалогов',
     messageForwarded: 'Сообщение переслано',
     forwardFailed: 'Не удалось переслать сообщение',
     forwardedFrom: 'Переслано из',
+    forwardFile: 'Переслать файл',
+    fileForwarded: 'Файл переслан',
+    
+    // Password verification
+    enterPassword: 'Введите 4-значный пароль',
+    verifyFailed: 'Ошибка проверки',
+    enterPasswordToDownload: 'Введите пароль для скачивания',
+    verifyPasswordForDialog: 'Подтвердите пароль для диалога',
     
     // Messages
     typeMessage: 'Введите сообщение...',

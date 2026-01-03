@@ -11,8 +11,10 @@ import { MediaPlayer } from '@/components/MediaPlayer';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ForwardMessageModal } from '@/components/ForwardMessageModal';
+import { ForwardFileModal } from '@/components/ForwardFileModal';
+import { PasswordPromptModal } from '@/components/PasswordPromptModal';
 import { supabase } from '@/integrations/supabase/client';
-import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getPasswordForDialog, getStoredDialogs } from '@/lib/device';
+import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getPasswordForDialog, getStoredDialogs, savePasswordForDialog } from '@/lib/device';
 import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { uploadFileWithProgress } from '@/lib/uploadHelper';
@@ -62,6 +64,9 @@ export default function DialogView() {
   const [editName, setEditName] = useState('');
   const [forwardModalOpen, setForwardModalOpen] = useState(false);
   const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
+  const [forwardFileModalOpen, setForwardFileModalOpen] = useState(false);
+  const [forwardingFileId, setForwardingFileId] = useState<string | null>(null);
+  const [passwordPromptOpen, setPasswordPromptOpen] = useState(false);
 
   const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
 
@@ -325,14 +330,61 @@ export default function DialogView() {
   // Check if there are other dialogs to forward to
   const hasOtherDialogs = getStoredDialogs().filter(d => d.dialogId !== dialogId).length > 0;
 
+  const handleOpenForwardFileModal = (fileId: string) => {
+    setForwardingFileId(fileId);
+    setForwardFileModalOpen(true);
+  };
+
+  const handleForwardFile = async (targetDialogId: string) => {
+    if (!forwardingFileId) return;
+    const file = files.find(f => f.id === forwardingFileId);
+    if (!file) return;
+
+    const customName = getDeviceName();
+    const targetLabel = getDeviceLabelForDialog(targetDialogId);
+    const currentLabel = customName || targetLabel || 'Unknown';
+
+    try {
+      // Download the file and re-upload to target dialog
+      const { data: fileData } = await supabase.storage.from('dialog-files').download(file.file_path);
+      if (!fileData) throw new Error('Failed to download file');
+      
+      const newFilePath = `${targetDialogId}/${Date.now()}-${file.file_name.replace(/[^\w\s.-]/g, '_')}`;
+      const { error: uploadError } = await supabase.storage.from('dialog-files').upload(newFilePath, fileData, { contentType: fileData.type });
+      if (uploadError) throw uploadError;
+      
+      const { error: dbError } = await supabase.from('files').insert({
+        dialog_id: targetDialogId,
+        file_name: file.file_name,
+        file_size: file.file_size,
+        file_path: newFilePath,
+        device_label: currentLabel
+      });
+      if (dbError) {
+        await supabase.storage.from('dialog-files').remove([newFilePath]);
+        throw dbError;
+      }
+      toast.success(t('fileForwarded'));
+    } catch (err) {
+      console.error('Forward file error:', err);
+      toast.error(t('forwardFailed'));
+    }
+    setForwardingFileId(null);
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 text-accent animate-spin" /></div>;
 
   const handleDownloadPassword = () => {
     const password = getPasswordForDialog(dialogId || '');
     if (!password) {
-      toast.error(t('passwordNotAvailable'));
+      // Open password prompt modal
+      setPasswordPromptOpen(true);
       return;
     }
+    downloadPasswordFile(password);
+  };
+
+  const downloadPasswordFile = (password: string) => {
     const content = `${t('appName')} - ${dialogName || t('dialog')}\n\n${t('password')}: ${password}\n\n${t('enterCodeToAccess')}`;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -341,6 +393,10 @@ export default function DialogView() {
     a.download = `${dialogName || 'dialog'}-password.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handlePasswordVerified = (password: string) => {
+    downloadPasswordFile(password);
   };
 
   return (
@@ -419,8 +475,10 @@ export default function DialogView() {
                       deviceLabel={file.device_label}
                       uploadedAt={file.uploaded_at}
                       fileUrl={getFileUrl(file.file_path)}
+                      filePath={file.file_path}
                       onDelete={handleDeleteFile}
                       onPlay={handlePlayMedia}
+                      onForward={hasOtherDialogs ? handleOpenForwardFileModal : undefined}
                       isDeleting={deletingId === file.id}
                     />
                   );
@@ -447,6 +505,21 @@ export default function DialogView() {
         onOpenChange={setForwardModalOpen}
         currentDialogId={dialogId || ''}
         onForward={handleForwardMessage}
+      />
+      
+      <ForwardFileModal
+        open={forwardFileModalOpen}
+        onOpenChange={setForwardFileModalOpen}
+        currentDialogId={dialogId || ''}
+        onForward={handleForwardFile}
+      />
+      
+      <PasswordPromptModal
+        open={passwordPromptOpen}
+        onOpenChange={setPasswordPromptOpen}
+        dialogId={dialogId || ''}
+        dialogName={dialogName || t('dialog')}
+        onSuccess={handlePasswordVerified}
       />
     </div>
   );
