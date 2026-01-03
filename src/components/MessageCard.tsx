@@ -1,4 +1,4 @@
-import { Copy, Trash2, Loader2, Play, Pause, Download } from 'lucide-react';
+import { Copy, Trash2, Loader2, Play, Pause, Download, Forward } from 'lucide-react';
 import { t, getLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useState, useRef } from 'react';
@@ -14,6 +14,8 @@ interface MessageCardProps {
   createdAt: string;
   onDelete: (id: string) => void;
   isDeleting?: boolean;
+  onForward?: (id: string) => void;
+  forwardedFrom?: string;
 }
 
 function formatDateLocalized(dateString: string): string {
@@ -52,7 +54,9 @@ export function MessageCard({
   deviceLabel, 
   createdAt,
   onDelete,
-  isDeleting 
+  isDeleting,
+  onForward,
+  forwardedFrom
 }: MessageCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -126,6 +130,9 @@ export function MessageCard({
       isDeleting && "opacity-50 pointer-events-none"
     )}>
       <div className="p-4 space-y-3">
+        {forwardedFrom && (
+          <p className="text-xs text-accent italic mb-2">{t('forwardedFrom')}: {forwardedFrom}</p>
+        )}
         {messageType === 'text' && content ? (
           <p className="text-foreground whitespace-pre-wrap break-words">
             {content}
@@ -195,6 +202,18 @@ export function MessageCard({
           </button>
         )}
         <div className="w-px bg-border" />
+        {onForward && (
+          <>
+            <button
+              onClick={() => onForward(id)}
+              className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm text-accent hover:bg-accent/10 transition-colors"
+            >
+              <Forward className="w-4 h-4" />
+              <span>{t('forward')}</span>
+            </button>
+            <div className="w-px bg-border" />
+          </>
+        )}
         <button
           onClick={() => onDelete(id)}
           disabled={isDeleting}

@@ -240,6 +240,9 @@ export default function Index() {
       
       addStoredDialog(dialog.id, deviceLabel, dialog.name);
       
+      // Save password for this device so it can download it later
+      savePasswordForDialog(dialog.id, password);
+      
       setEnterModalOpen(false);
       navigate(`/dialog/${dialog.id}`);
       return true;

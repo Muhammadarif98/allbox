@@ -73,7 +73,16 @@ export const translations = {
     // Password download in dialog
     password: 'Password',
     enterCodeToAccess: 'Enter this code to access the dialog.',
-    passwordNotAvailable: 'Password not available (only available if you created this dialog)',
+    passwordNotAvailable: 'Password not available on this device',
+    
+    // Forward
+    forward: 'Forward',
+    forwardTo: 'Forward to',
+    selectDialog: 'Select dialog',
+    noDialogsToForward: 'No other dialogs available',
+    messageForwarded: 'Message forwarded',
+    forwardFailed: 'Failed to forward message',
+    forwardedFrom: 'Forwarded from',
     
     // Messages
     typeMessage: 'Type a message...',
@@ -171,7 +180,16 @@ export const translations = {
     // Password download in dialog
     password: 'Пароль',
     enterCodeToAccess: 'Введите этот код для доступа к диалогу.',
-    passwordNotAvailable: 'Пароль недоступен (доступен только если вы создали этот диалог)',
+    passwordNotAvailable: 'Пароль недоступен на этом устройстве',
+    
+    // Forward
+    forward: 'Переслать',
+    forwardTo: 'Переслать в',
+    selectDialog: 'Выберите диалог',
+    noDialogsToForward: 'Нет других диалогов',
+    messageForwarded: 'Сообщение переслано',
+    forwardFailed: 'Не удалось переслать сообщение',
+    forwardedFrom: 'Переслано из',
     
     // Messages
     typeMessage: 'Введите сообщение...',

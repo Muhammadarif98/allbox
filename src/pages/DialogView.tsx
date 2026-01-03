@@ -10,8 +10,9 @@ import { MessageInput } from '@/components/MessageInput';
 import { MediaPlayer } from '@/components/MediaPlayer';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { ForwardMessageModal } from '@/components/ForwardMessageModal';
 import { supabase } from '@/integrations/supabase/client';
-import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getPasswordForDialog } from '@/lib/device';
+import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getPasswordForDialog, getStoredDialogs } from '@/lib/device';
 import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { uploadFileWithProgress } from '@/lib/uploadHelper';
@@ -59,6 +60,8 @@ export default function DialogView() {
   const [mediaPlayer, setMediaPlayer] = useState<MediaState | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
+  const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
 
   const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
 
@@ -266,6 +269,62 @@ export default function DialogView() {
     }
   };
 
+  const handleOpenForwardModal = (messageId: string) => {
+    setForwardingMessageId(messageId);
+    setForwardModalOpen(true);
+  };
+
+  const handleForwardMessage = async (targetDialogId: string) => {
+    if (!forwardingMessageId) return;
+    const message = messages.find(m => m.id === forwardingMessageId);
+    if (!message) return;
+
+    const customName = getDeviceName();
+    const targetLabel = getDeviceLabelForDialog(targetDialogId);
+    const currentLabel = customName || targetLabel || 'Unknown';
+    const forwardedPrefix = `[${t('forwardedFrom')}: ${dialogName || t('dialog')}]\n\n`;
+
+    try {
+      if (message.message_type === 'text' && message.content) {
+        const { error } = await supabase.from('messages').insert({
+          dialog_id: targetDialogId,
+          device_label: currentLabel,
+          content: forwardedPrefix + message.content,
+          message_type: 'text'
+        });
+        if (error) throw error;
+      } else if (message.message_type === 'voice' && message.voice_path) {
+        // Download voice file and re-upload to target dialog
+        const { data: voiceData } = await supabase.storage.from('dialog-files').download(message.voice_path);
+        if (!voiceData) throw new Error('Failed to download voice');
+        
+        const newVoicePath = `${targetDialogId}/voice-${Date.now()}.webm`;
+        const { error: uploadError } = await supabase.storage.from('dialog-files').upload(newVoicePath, voiceData, { contentType: 'audio/webm' });
+        if (uploadError) throw uploadError;
+        
+        const { error: dbError } = await supabase.from('messages').insert({
+          dialog_id: targetDialogId,
+          device_label: currentLabel,
+          voice_path: newVoicePath,
+          voice_duration: message.voice_duration,
+          message_type: 'voice'
+        });
+        if (dbError) {
+          await supabase.storage.from('dialog-files').remove([newVoicePath]);
+          throw dbError;
+        }
+      }
+      toast.success(t('messageForwarded'));
+    } catch (err) {
+      console.error('Forward error:', err);
+      toast.error(t('forwardFailed'));
+    }
+    setForwardingMessageId(null);
+  };
+
+  // Check if there are other dialogs to forward to
+  const hasOtherDialogs = getStoredDialogs().filter(d => d.dialogId !== dialogId).length > 0;
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 text-accent animate-spin" /></div>;
 
   const handleDownloadPassword = () => {
@@ -346,6 +405,7 @@ export default function DialogView() {
                       createdAt={msg.created_at}
                       onDelete={handleDeleteMessage}
                       isDeleting={deletingId === msg.id}
+                      onForward={hasOtherDialogs ? handleOpenForwardModal : undefined}
                     />
                   );
                 } else {
@@ -381,6 +441,13 @@ export default function DialogView() {
       </div>
 
       {mediaPlayer && <MediaPlayer url={mediaPlayer.url} fileName={mediaPlayer.fileName} type={mediaPlayer.type} onClose={() => setMediaPlayer(null)} />}
+      
+      <ForwardMessageModal
+        open={forwardModalOpen}
+        onOpenChange={setForwardModalOpen}
+        currentDialogId={dialogId || ''}
+        onForward={handleForwardMessage}
+      />
     </div>
   );
 }
