@@ -199,7 +199,7 @@ export function generatePassword(): string {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
-// Save password for a dialog (only at creation time)
+// Save password for a dialog (can be called at creation or when entering)
 export function savePasswordForDialog(dialogId: string, password: string): void {
   const passwords = getStoredPasswords();
   passwords[dialogId] = password;
