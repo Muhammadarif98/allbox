@@ -52,6 +52,7 @@ export type Database = {
           id: string
           last_activity_at: string | null
           name: string
+          password: string | null
           password_hash: string
         }
         Insert: {
@@ -59,6 +60,7 @@ export type Database = {
           id?: string
           last_activity_at?: string | null
           name?: string
+          password?: string | null
           password_hash: string
         }
         Update: {
@@ -66,6 +68,7 @@ export type Database = {
           id?: string
           last_activity_at?: string | null
           name?: string
+          password?: string | null
           password_hash?: string
         }
         Relationships: []
