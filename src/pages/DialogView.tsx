@@ -12,9 +12,9 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ForwardMessageModal } from '@/components/ForwardMessageModal';
 import { ForwardFileModal } from '@/components/ForwardFileModal';
-import { PasswordPromptModal } from '@/components/PasswordPromptModal';
+import { PasswordUnavailableModal } from '@/components/PasswordUnavailableModal';
 import { supabase } from '@/integrations/supabase/client';
-import { getDeviceId, hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getPasswordForDialog, getStoredDialogs, savePasswordForDialog } from '@/lib/device';
+import { hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getPasswordForDialog, getStoredDialogs } from '@/lib/device';
 import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { uploadFileWithProgress } from '@/lib/uploadHelper';
@@ -375,13 +375,14 @@ export default function DialogView() {
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 text-accent animate-spin" /></div>;
 
   const handleDownloadPassword = () => {
-    const password = getPasswordForDialog(dialogId || '');
-    if (!password) {
-      // Open password prompt modal
-      setPasswordPromptOpen(true);
+    // First check if password is saved locally
+    const localPassword = getPasswordForDialog(dialogId || '');
+    if (localPassword) {
+      downloadPasswordFile(localPassword);
       return;
     }
-    downloadPasswordFile(password);
+    // Otherwise, show modal explaining password is not available
+    setPasswordPromptOpen(true);
   };
 
   const downloadPasswordFile = (password: string) => {
@@ -393,10 +394,6 @@ export default function DialogView() {
     a.download = `${dialogName || 'dialog'}-password.txt`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const handlePasswordVerified = (password: string) => {
-    downloadPasswordFile(password);
   };
 
   return (
@@ -514,12 +511,10 @@ export default function DialogView() {
         onForward={handleForwardFile}
       />
       
-      <PasswordPromptModal
+      <PasswordUnavailableModal
         open={passwordPromptOpen}
         onOpenChange={setPasswordPromptOpen}
-        dialogId={dialogId || ''}
         dialogName={dialogName || t('dialog')}
-        onSuccess={handlePasswordVerified}
       />
     </div>
   );

@@ -91,6 +91,10 @@ export const translations = {
     enterPassword: 'Please enter 4-digit password',
     verifyFailed: 'Verification failed',
     enterPasswordToDownload: 'Enter Password to Download',
+    passwordUnavailable: 'Password Unavailable',
+    passwordUnavailableDesc: 'Password is not saved on this device.',
+    passwordNotSaved: 'The password was only saved when you created or joined the dialog with the 4-digit code. If you need the password, ask someone who has it or check the device where you originally entered.',
+    ok: 'OK',
     verifyPasswordForDialog: 'Verify password for dialog',
     
     // Messages
@@ -208,6 +212,10 @@ export const translations = {
     verifyFailed: 'Ошибка проверки',
     enterPasswordToDownload: 'Введите пароль для скачивания',
     verifyPasswordForDialog: 'Подтвердите пароль для диалога',
+    passwordUnavailable: 'Пароль недоступен',
+    passwordUnavailableDesc: 'Пароль не сохранён на этом устройстве.',
+    passwordNotSaved: 'Пароль сохраняется только при создании диалога или при вводе 4-значного кода. Если вам нужен пароль, спросите у того, кто его знает, или проверьте устройство, где вы изначально входили.',
+    ok: 'ОК',
     
     // Messages
     typeMessage: 'Введите сообщение...',
