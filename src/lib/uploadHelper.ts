@@ -1,16 +1,27 @@
-import { supabase } from '@/integrations/supabase/client';
+import * as tus from 'tus-js-client';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 
 export interface UploadResult {
   success: boolean;
   error?: string;
 }
 
+// Get the direct storage endpoint for better performance
+function getStorageEndpoint(): string {
+  // Use direct storage hostname for performance
+  if (PROJECT_ID) {
+    return `https://${PROJECT_ID}.storage.supabase.co`;
+  }
+  // Fallback to standard URL
+  return SUPABASE_URL;
+}
+
 /**
- * Upload a file with progress tracking using XMLHttpRequest
- * This bypasses the Supabase JS client timeout issues for large files
+ * Upload a file with progress tracking using TUS resumable uploads
+ * This handles large files (up to 1GB) reliably with resume capability
  */
 export function uploadFileWithProgress(
   file: File,
@@ -19,49 +30,49 @@ export function uploadFileWithProgress(
   onProgress?: (percent: number) => void
 ): Promise<UploadResult> {
   return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    const url = `${SUPABASE_URL}/storage/v1/object/${bucketName}/${filePath}`;
+    const storageEndpoint = getStorageEndpoint();
     
-    xhr.open('POST', url, true);
-    xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_KEY}`);
-    xhr.setRequestHeader('apikey', SUPABASE_KEY);
-    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-    xhr.setRequestHeader('x-upsert', 'true');
-    
-    // Track upload progress
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable && onProgress) {
-        const percent = (event.loaded / event.total) * 100;
-        onProgress(percent);
-      }
-    };
-    
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve({ success: true });
-      } else {
-        let errorMessage = 'Upload failed';
-        try {
-          const response = JSON.parse(xhr.responseText);
-          errorMessage = response.message || response.error || errorMessage;
-        } catch {
-          errorMessage = xhr.statusText || errorMessage;
+    const upload = new tus.Upload(file, {
+      endpoint: `${storageEndpoint}/storage/v1/upload/resumable`,
+      retryDelays: [0, 1000, 3000, 5000, 10000, 20000],
+      headers: {
+        authorization: `Bearer ${SUPABASE_KEY}`,
+        apikey: SUPABASE_KEY,
+        'x-upsert': 'true',
+      },
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      metadata: {
+        bucketName: bucketName,
+        objectName: filePath,
+        contentType: file.type || 'application/octet-stream',
+        cacheControl: '3600',
+      },
+      chunkSize: 6 * 1024 * 1024, // Must be 6MB for Supabase
+      onError: (error) => {
+        console.error('Upload error:', error);
+        resolve({ success: false, error: error.message || 'Upload failed' });
+      },
+      onProgress: (bytesUploaded, bytesTotal) => {
+        if (onProgress) {
+          const percent = (bytesUploaded / bytesTotal) * 100;
+          onProgress(percent);
         }
-        resolve({ success: false, error: errorMessage });
+      },
+      onSuccess: () => {
+        resolve({ success: true });
+      },
+    });
+
+    // Check for previous uploads to resume
+    upload.findPreviousUploads().then((previousUploads) => {
+      // If there was a previous incomplete upload, resume it
+      if (previousUploads.length > 0) {
+        upload.resumeFromPreviousUpload(previousUploads[0]);
       }
-    };
-    
-    xhr.onerror = () => {
-      resolve({ success: false, error: 'Network error during upload' });
-    };
-    
-    xhr.ontimeout = () => {
-      resolve({ success: false, error: 'Upload timed out' });
-    };
-    
-    // No timeout for large files
-    xhr.timeout = 0;
-    
-    xhr.send(file);
+      
+      // Start the upload
+      upload.start();
+    });
   });
 }
