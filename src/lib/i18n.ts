@@ -122,6 +122,16 @@ export const translations = {
     dialogLeft: 'Left dialog completely',
     dialogRestored: 'Dialog restored',
     deviceNameUpdated: 'Device name updated',
+    
+    // Media Panel
+    mediaFiles: 'Media',
+    allMedia: 'All Files',
+    videoFiles: 'Video',
+    audioFiles: 'Audio',
+    voiceMessages: 'Voice',
+    documents: 'Documents',
+    noMedia: 'No media files',
+    openMedia: 'Media',
   },
   ru: {
     // Homepage
@@ -242,6 +252,16 @@ export const translations = {
     dialogLeft: 'Вы покинули диалог',
     dialogRestored: 'Диалог восстановлен',
     deviceNameUpdated: 'Имя устройства обновлено',
+    
+    // Media Panel
+    mediaFiles: 'Медиа',
+    allMedia: 'Все файлы',
+    videoFiles: 'Видео',
+    audioFiles: 'Аудио',
+    voiceMessages: 'Голосовые',
+    documents: 'Документы',
+    noMedia: 'Нет медиа файлов',
+    openMedia: 'Медиа',
   },
 };
 

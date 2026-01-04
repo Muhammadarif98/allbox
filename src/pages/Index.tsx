@@ -145,9 +145,10 @@ export default function Index() {
       const passwordHash = await hashPassword(password);
       const dialogName = getRandomDialogName(getLanguage());
       
+      // Store password in database for anyone to download
       const { data: dialog, error } = await supabase
         .from('dialogs')
-        .insert({ password_hash: passwordHash, name: dialogName })
+        .insert({ password_hash: passwordHash, name: dialogName, password: password })
         .select()
         .single();
       

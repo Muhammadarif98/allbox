@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Loader2, Edit3, Check, X, LogOut, Download } from 'lucide-react';
+import { ArrowLeft, Users, Loader2, Edit3, Check, X, LogOut, Download, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FileCard } from '@/components/FileCard';
@@ -8,16 +8,17 @@ import { MessageCard } from '@/components/MessageCard';
 import { FileUploadZone } from '@/components/FileUploadZone';
 import { MessageInput } from '@/components/MessageInput';
 import { MediaPlayer } from '@/components/MediaPlayer';
+import { MediaPanel } from '@/components/MediaPanel';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ForwardMessageModal } from '@/components/ForwardMessageModal';
 import { ForwardFileModal } from '@/components/ForwardFileModal';
-import { PasswordUnavailableModal } from '@/components/PasswordUnavailableModal';
 import { supabase } from '@/integrations/supabase/client';
-import { hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getPasswordForDialog, getStoredDialogs } from '@/lib/device';
+import { hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getStoredDialogs } from '@/lib/device';
 import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { uploadFileWithProgress } from '@/lib/uploadHelper';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileRecord {
   id: string;
@@ -66,7 +67,8 @@ export default function DialogView() {
   const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
   const [forwardFileModalOpen, setForwardFileModalOpen] = useState(false);
   const [forwardingFileId, setForwardingFileId] = useState<string | null>(null);
-  const [passwordPromptOpen, setPasswordPromptOpen] = useState(false);
+  const [mediaPanelOpen, setMediaPanelOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
 
@@ -374,15 +376,23 @@ export default function DialogView() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 text-accent animate-spin" /></div>;
 
-  const handleDownloadPassword = () => {
-    // First check if password is saved locally
-    const localPassword = getPasswordForDialog(dialogId || '');
-    if (localPassword) {
-      downloadPasswordFile(localPassword);
-      return;
+  const handleDownloadPassword = async () => {
+    // Fetch password from database - anyone can download
+    try {
+      const { data } = await supabase
+        .from('dialogs')
+        .select('password')
+        .eq('id', dialogId)
+        .single();
+      
+      if (data?.password) {
+        downloadPasswordFile(data.password);
+      } else {
+        toast.error(t('passwordNotAvailable'));
+      }
+    } catch {
+      toast.error(t('downloadFailed'));
     }
-    // Otherwise, show modal explaining password is not available
-    setPasswordPromptOpen(true);
   };
 
   const downloadPasswordFile = (password: string) => {
@@ -427,6 +437,7 @@ export default function DialogView() {
           </div>
           
           <div className="flex items-center gap-3 flex-wrap">
+            <Button onClick={() => setMediaPanelOpen(true)} variant="outline" size="sm" className="text-accent border-accent/50 hover:bg-accent/10"><FolderOpen className="w-4 h-4 mr-2" />{t('openMedia')}</Button>
             <Button onClick={handleDownloadPassword} variant="outline" size="sm" className="text-secondary border-secondary/50 hover:bg-secondary/10"><Download className="w-4 h-4 mr-2" />{t('downloadPassword')}</Button>
             <Button onClick={handleExitDialog} variant="outline" size="sm" className="text-destructive border-destructive/50 hover:bg-destructive/10"><LogOut className="w-4 h-4 mr-2" />{t('exitDialog')}</Button>
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-lg"><Users className="w-4 h-4" /><span>{deviceCount} {t('devices')}</span></div>
@@ -442,7 +453,8 @@ export default function DialogView() {
             <h2 className="text-xl font-display font-semibold text-foreground">
               {t('files')} ({sortedContent.length})
             </h2>
-            <div className="space-y-3">
+            {/* Desktop: 3-column grid, Mobile: single column */}
+            <div className={isMobile ? "space-y-3" : "grid grid-cols-3 gap-4"}>
               {sortedContent.map((item) => {
                 if (item.type === 'message') {
                   const msg = item as MessageRecord & { timestamp: string };
@@ -497,6 +509,18 @@ export default function DialogView() {
 
       {mediaPlayer && <MediaPlayer url={mediaPlayer.url} fileName={mediaPlayer.fileName} type={mediaPlayer.type} onClose={() => setMediaPlayer(null)} />}
       
+      <MediaPanel
+        open={mediaPanelOpen}
+        onClose={() => setMediaPanelOpen(false)}
+        files={files}
+        messages={messages}
+        getFileUrl={getFileUrl}
+        onDeleteFile={handleDeleteFile}
+        onPlayMedia={handlePlayMedia}
+        onForwardFile={hasOtherDialogs ? handleOpenForwardFileModal : undefined}
+        deletingId={deletingId}
+      />
+      
       <ForwardMessageModal
         open={forwardModalOpen}
         onOpenChange={setForwardModalOpen}
@@ -509,12 +533,6 @@ export default function DialogView() {
         onOpenChange={setForwardFileModalOpen}
         currentDialogId={dialogId || ''}
         onForward={handleForwardFile}
-      />
-      
-      <PasswordUnavailableModal
-        open={passwordPromptOpen}
-        onOpenChange={setPasswordPromptOpen}
-        dialogName={dialogName || t('dialog')}
       />
     </div>
   );
