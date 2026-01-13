@@ -453,8 +453,8 @@ export default function DialogView() {
             <h2 className="text-xl font-display font-semibold text-foreground">
               {t('files')} ({sortedContent.length})
             </h2>
-            {/* Desktop: 3-column grid, Mobile: single column */}
-            <div className={isMobile ? "space-y-3" : "grid grid-cols-3 gap-4"}>
+            {/* Desktop: 3-column masonry-like grid, Mobile: single column */}
+            <div className={isMobile ? "space-y-3" : "grid grid-cols-3 gap-4 items-start"}>
               {sortedContent.map((item) => {
                 if (item.type === 'message') {
                   const msg = item as MessageRecord & { timestamp: string };
@@ -471,6 +471,7 @@ export default function DialogView() {
                       onDelete={handleDeleteMessage}
                       isDeleting={deletingId === msg.id}
                       onForward={hasOtherDialogs ? handleOpenForwardModal : undefined}
+                      isCompact={msg.message_type === 'text'}
                     />
                   );
                 } else {
