@@ -16,6 +16,7 @@ interface MessageCardProps {
   isDeleting?: boolean;
   onForward?: (id: string) => void;
   forwardedFrom?: string;
+  isCompact?: boolean;
 }
 
 function formatDateLocalized(dateString: string): string {
@@ -56,7 +57,8 @@ export function MessageCard({
   onDelete,
   isDeleting,
   onForward,
-  forwardedFrom
+  forwardedFrom,
+  isCompact
 }: MessageCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -126,10 +128,10 @@ export function MessageCard({
     <div className={cn(
       "bg-card rounded-xl border border-border overflow-hidden",
       "transition-all duration-200 hover:border-secondary/50",
-      "shadow-soft",
+      "shadow-soft h-fit",
       isDeleting && "opacity-50 pointer-events-none"
     )}>
-      <div className="p-4 space-y-3">
+      <div className={cn("space-y-2", isCompact ? "p-3" : "p-4")}>
         {forwardedFrom && (
           <p className="text-xs text-accent italic mb-2">{t('forwardedFrom')}: {forwardedFrom}</p>
         )}

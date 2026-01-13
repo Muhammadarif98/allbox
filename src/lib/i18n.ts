@@ -126,12 +126,16 @@ export const translations = {
     // Media Panel
     mediaFiles: 'Media',
     allMedia: 'All Files',
+    photoFiles: 'Photos',
     videoFiles: 'Video',
     audioFiles: 'Audio',
     voiceMessages: 'Voice',
     documents: 'Documents',
     noMedia: 'No media files',
     openMedia: 'Media',
+    
+    // Stats
+    totalDialogs: 'Total dialogs created',
   },
   ru: {
     // Homepage
@@ -256,12 +260,16 @@ export const translations = {
     // Media Panel
     mediaFiles: 'Медиа',
     allMedia: 'Все файлы',
+    photoFiles: 'Фото',
     videoFiles: 'Видео',
     audioFiles: 'Аудио',
     voiceMessages: 'Голосовые',
     documents: 'Документы',
     noMedia: 'Нет медиа файлов',
     openMedia: 'Медиа',
+    
+    // Stats
+    totalDialogs: 'Всего создано диалогов',
   },
 };
 

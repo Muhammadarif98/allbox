@@ -40,6 +40,7 @@ export default function Index() {
   const [showArchived, setShowArchived] = useState(false);
   const [dialogActivities, setDialogActivities] = useState<Record<string, string>>({});
   const [dialogNames, setDialogNames] = useState<Record<string, string>>({});
+  const [totalDialogCount, setTotalDialogCount] = useState<number | null>(null);
   
   const storedDialogs = getStoredDialogs();
   const archivedDialogs = getArchivedDialogs();
@@ -49,6 +50,17 @@ export default function Index() {
   // Initialize theme
   useEffect(() => {
     initTheme();
+  }, []);
+
+  // Fetch total dialog count
+  useEffect(() => {
+    const fetchTotalCount = async () => {
+      const { count } = await supabase
+        .from('dialogs')
+        .select('*', { count: 'exact', head: true });
+      setTotalDialogCount(count);
+    };
+    fetchTotalCount();
   }, []);
 
   // Fetch last activity and names for all dialogs
@@ -402,6 +414,14 @@ export default function Index() {
           <p>{t('footer')}</p>
         </footer>
       </div>
+
+      {/* Total dialog count - bottom left */}
+      {totalDialogCount !== null && (
+        <div className="fixed bottom-4 left-4 bg-card/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{totalDialogCount}</span>
+          <span className="ml-1.5">{t('totalDialogs')}</span>
+        </div>
+      )}
 
       <EnterDialogModal
         open={enterModalOpen}

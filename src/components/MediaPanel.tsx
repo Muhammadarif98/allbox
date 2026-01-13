@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Video, Music, Mic, FileText, ChevronRight } from 'lucide-react';
+import { X, Video, Music, Mic, FileText, ChevronRight, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,7 @@ interface MediaPanelProps {
   deletingId: string | null;
 }
 
-type MediaTab = 'all' | 'video' | 'audio' | 'voice' | 'documents';
+type MediaTab = 'all' | 'photos' | 'video' | 'audio' | 'voice' | 'documents';
 
 export function MediaPanel({
   open,
@@ -65,6 +65,8 @@ export function MediaPanel({
 
   const getFilteredFiles = () => {
     switch (activeTab) {
+      case 'photos':
+        return imageFiles;
       case 'video':
         return videoFiles;
       case 'audio':
@@ -82,6 +84,7 @@ export function MediaPanel({
 
   const tabs: { id: MediaTab; label: string; icon: typeof Video; count: number }[] = [
     { id: 'all', label: t('allMedia'), icon: FileText, count: files.length },
+    { id: 'photos', label: t('photoFiles'), icon: Image, count: imageFiles.length },
     { id: 'video', label: t('videoFiles'), icon: Video, count: videoFiles.length },
     { id: 'audio', label: t('audioFiles'), icon: Music, count: audioFiles.length },
     { id: 'voice', label: t('voiceMessages'), icon: Mic, count: voiceMessages.length },
