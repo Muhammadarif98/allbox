@@ -1,10 +1,17 @@
-import { useState } from 'react';
-import { X, Video, Music, Mic, FileText, ChevronRight, Image } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { X, Video, Music, Mic, FileText, ChevronRight, Image, ArrowUpDown, Calendar, HardDrive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { FileCard } from './FileCard';
 import { isImageFile, isVideoFile, isAudioFile } from '@/lib/fileUtils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FileRecord {
   id: string;
@@ -38,6 +45,9 @@ interface MediaPanelProps {
 }
 
 type MediaTab = 'all' | 'photos' | 'video' | 'audio' | 'voice' | 'documents';
+type SortOrder = 'newest' | 'oldest';
+type DateFilter = 'all' | 'today' | 'week' | 'month';
+type SizeFilter = 'all' | 'small' | 'medium' | 'large';
 
 export function MediaPanel({
   open,
@@ -51,6 +61,9 @@ export function MediaPanel({
   deletingId
 }: MediaPanelProps) {
   const [activeTab, setActiveTab] = useState<MediaTab>('all');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [sizeFilter, setSizeFilter] = useState<SizeFilter>('all');
 
   // Filter files by type
   const videoFiles = files.filter(f => isVideoFile(f.file_name));
@@ -63,7 +76,7 @@ export function MediaPanel({
   );
   const voiceMessages = messages.filter(m => m.message_type === 'voice' && m.voice_path);
 
-  const getFilteredFiles = () => {
+  const getFilesByType = () => {
     switch (activeTab) {
       case 'photos':
         return imageFiles;
@@ -78,9 +91,87 @@ export function MediaPanel({
     }
   };
 
-  const getFilteredVoice = () => {
-    return activeTab === 'voice' || activeTab === 'all' ? voiceMessages : [];
-  };
+  // Apply all filters and sorting
+  const filteredFiles = useMemo(() => {
+    let result = getFilesByType();
+    
+    // Date filter
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          filterDate.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          filterDate.setMonth(now.getMonth() - 1);
+          break;
+      }
+      
+      result = result.filter(f => new Date(f.uploaded_at) >= filterDate);
+    }
+    
+    // Size filter (small < 1MB, medium 1-100MB, large > 100MB)
+    if (sizeFilter !== 'all') {
+      switch (sizeFilter) {
+        case 'small':
+          result = result.filter(f => f.file_size < 1024 * 1024);
+          break;
+        case 'medium':
+          result = result.filter(f => f.file_size >= 1024 * 1024 && f.file_size < 100 * 1024 * 1024);
+          break;
+        case 'large':
+          result = result.filter(f => f.file_size >= 100 * 1024 * 1024);
+          break;
+      }
+    }
+    
+    // Sort
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.uploaded_at).getTime();
+      const dateB = new Date(b.uploaded_at).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+    
+    return result;
+  }, [files, activeTab, dateFilter, sizeFilter, sortOrder, imageFiles, videoFiles, audioFiles, documentFiles]);
+
+  const filteredVoice = useMemo(() => {
+    let result = activeTab === 'voice' || activeTab === 'all' ? voiceMessages : [];
+    
+    // Date filter for voice
+    if (dateFilter !== 'all' && result.length > 0) {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          filterDate.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          filterDate.setMonth(now.getMonth() - 1);
+          break;
+      }
+      
+      result = result.filter(m => new Date(m.created_at) >= filterDate);
+    }
+    
+    // Sort voice messages
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+    
+    return result;
+  }, [messages, activeTab, dateFilter, sortOrder, voiceMessages]);
 
   const tabs: { id: MediaTab; label: string; icon: typeof Video; count: number }[] = [
     { id: 'all', label: t('allMedia'), icon: FileText, count: files.length },
@@ -90,9 +181,6 @@ export function MediaPanel({
     { id: 'voice', label: t('voiceMessages'), icon: Mic, count: voiceMessages.length },
     { id: 'documents', label: t('documents'), icon: FileText, count: documentFiles.length },
   ];
-
-  const filteredFiles = getFilteredFiles();
-  const filteredVoice = getFilteredVoice();
 
   return (
     <>
@@ -142,6 +230,51 @@ export function MediaPanel({
               </span>
             </button>
           ))}
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 p-4 border-b border-border">
+          {/* Sort Order */}
+          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
+            <SelectTrigger className="w-[130px] h-8 text-xs">
+              <ArrowUpDown className="w-3 h-3 mr-1" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">{t('sortNewest')}</SelectItem>
+              <SelectItem value="oldest">{t('sortOldest')}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Date Filter */}
+          <Select value={dateFilter} onValueChange={(v) => setDateFilter(v as DateFilter)}>
+            <SelectTrigger className="w-[120px] h-8 text-xs">
+              <Calendar className="w-3 h-3 mr-1" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('filterAllTime')}</SelectItem>
+              <SelectItem value="today">{t('filterToday')}</SelectItem>
+              <SelectItem value="week">{t('filterWeek')}</SelectItem>
+              <SelectItem value="month">{t('filterMonth')}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Size Filter */}
+          {activeTab !== 'voice' && (
+            <Select value={sizeFilter} onValueChange={(v) => setSizeFilter(v as SizeFilter)}>
+              <SelectTrigger className="w-[120px] h-8 text-xs">
+                <HardDrive className="w-3 h-3 mr-1" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filterAllSizes')}</SelectItem>
+                <SelectItem value="small">{t('filterSmall')}</SelectItem>
+                <SelectItem value="medium">{t('filterMedium')}</SelectItem>
+                <SelectItem value="large">{t('filterLarge')}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Content */}

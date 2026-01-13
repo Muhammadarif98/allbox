@@ -134,6 +134,18 @@ export const translations = {
     noMedia: 'No media files',
     openMedia: 'Media',
     
+    // Filters
+    sortNewest: 'Newest first',
+    sortOldest: 'Oldest first',
+    filterAllTime: 'All time',
+    filterToday: 'Today',
+    filterWeek: 'This week',
+    filterMonth: 'This month',
+    filterAllSizes: 'All sizes',
+    filterSmall: '< 1 MB',
+    filterMedium: '1-100 MB',
+    filterLarge: '> 100 MB',
+    
     // Stats
     totalDialogs: 'Total dialogs created',
   },
@@ -267,6 +279,18 @@ export const translations = {
     documents: 'Документы',
     noMedia: 'Нет медиа файлов',
     openMedia: 'Медиа',
+    
+    // Filters
+    sortNewest: 'Сначала новые',
+    sortOldest: 'Сначала старые',
+    filterAllTime: 'Всё время',
+    filterToday: 'Сегодня',
+    filterWeek: 'За неделю',
+    filterMonth: 'За месяц',
+    filterAllSizes: 'Все размеры',
+    filterSmall: '< 1 МБ',
+    filterMedium: '1-100 МБ',
+    filterLarge: '> 100 МБ',
     
     // Stats
     totalDialogs: 'Всего создано диалогов',
