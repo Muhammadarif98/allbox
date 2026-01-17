@@ -194,9 +194,9 @@ export function removeStoredDialog(dialogId: string): void {
   localStorage.setItem(DIALOGS_KEY, JSON.stringify(dialogs));
 }
 
-// Generate a random 4-digit password
+// Generate a random 6-digit password (new format)
 export function generatePassword(): string {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 // Save password for a dialog (can be called at creation or when entering)

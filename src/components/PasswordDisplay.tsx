@@ -57,21 +57,21 @@ export function PasswordDisplay({ password, dialogName, onConfirm }: PasswordDis
           </p>
         </div>
 
-        {/* 4-digit code label */}
+        {/* 6-digit code label */}
         <p className="text-sm text-muted-foreground font-medium">
           {t('dialogCode')}:
         </p>
 
         {/* Password Display - SHOW ACTUAL DIGITS */}
         <div className="relative">
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-2">
             {password.split('').map((digit, i) => (
               <div
                 key={i}
                 className={cn(
-                  "w-16 h-20 flex items-center justify-center",
+                  "w-12 h-16 sm:w-14 sm:h-18 flex items-center justify-center",
                   "bg-background border-2 border-accent rounded-xl",
-                  "text-4xl font-display font-bold text-accent",
+                  "text-2xl sm:text-3xl font-display font-bold text-accent",
                   "shadow-glow animate-pulse-glow"
                 )}
                 style={{ animationDelay: `${i * 0.1}s` }}

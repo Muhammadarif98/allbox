@@ -17,7 +17,7 @@ export const translations = {
     
     // Security warning
     securityWarningTitle: 'Important Notice',
-    securityWarningText: 'This platform uses simple 4-digit codes. Anyone who guesses the code can access your dialog. Do not upload sensitive personal documents, passwords, or confidential data.',
+    securityWarningText: 'This platform uses simple 6-digit codes. Anyone who guesses the code can access your dialog. Do not upload sensitive personal documents, passwords, or confidential data.',
     securityWarningTips: 'AllBox is designed for quick file transfers between your own devices. Remember to delete files after transfer if they contain sensitive information. This is not a messenger or long-term storage.',
     
     // Password screen
@@ -31,7 +31,7 @@ export const translations = {
     
     // Enter dialog modal
     enterDialogTitle: 'Enter Dialog',
-    enterPasswordPrompt: 'Enter the 4-digit password to access the dialog',
+    enterPasswordPrompt: 'Enter the password to access the dialog (4 or 6 digits)',
     wrongPassword: 'Wrong password. Please try again.',
     enter: 'Enter Dialog',
     
@@ -168,7 +168,7 @@ export const translations = {
     
     // Security warning
     securityWarningTitle: 'Важное предупреждение',
-    securityWarningText: 'Платформа использует простые 4-значные коды. Любой, кто угадает код, может получить доступ к диалогу. Не загружайте личные документы, пароли или конфиденциальные данные.',
+    securityWarningText: 'Платформа использует простые 6-значные коды. Любой, кто угадает код, может получить доступ к диалогу. Не загружайте личные документы, пароли или конфиденциальные данные.',
     securityWarningTips: 'AllBox создан для быстрой передачи файлов между вашими устройствами. Не забывайте удалять файлы после передачи, если они содержат важную информацию. Это не мессенджер и не хранилище.',
     
     // Password screen
@@ -182,7 +182,7 @@ export const translations = {
     
     // Enter dialog modal
     enterDialogTitle: 'Войти в диалог',
-    enterPasswordPrompt: 'Введите 4-значный пароль для доступа к диалогу',
+    enterPasswordPrompt: 'Введите пароль для доступа к диалогу (4 или 6 цифр)',
     wrongPassword: 'Неверный пароль. Попробуйте снова.',
     enter: 'Войти',
     
