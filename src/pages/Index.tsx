@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogIn, Box, Loader2, Search, Archive } from 'lucide-react';
+import { Plus, LogIn, Box, Loader2, Search, Archive, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DialogCard } from '@/components/DialogCard';
@@ -311,6 +311,20 @@ export default function Index() {
             {t('tagline')}
           </p>
         </header>
+
+        {/* Security Warning */}
+        <div className="animate-fade-in bg-destructive/10 border border-destructive/30 rounded-xl p-4 space-y-2" style={{ animationDelay: '0.03s' }}>
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+            <span className="font-display font-semibold">{t('securityWarningTitle')}</span>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {t('securityWarningText')}
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {t('securityWarningTips')}
+          </p>
+        </div>
 
         {/* Device Name Editor */}
         <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
