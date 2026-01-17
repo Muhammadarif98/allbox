@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { PasswordInput } from '@/components/PasswordInput';
+import { FlexiblePasswordInput } from '@/components/PasswordInput';
 import { t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
@@ -17,9 +17,11 @@ export function EnterDialogModal({ open, onOpenChange, onEnter }: EnterDialogMod
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
+  const isValidLength = password.length === 4 || password.length === 6;
+
   const handleEnter = async (pwd?: string) => {
     const passwordToUse = pwd || password;
-    if (passwordToUse.length !== 4) return;
+    if (passwordToUse.length !== 4 && passwordToUse.length !== 6) return;
     
     setLoading(true);
     setError(false);
@@ -54,7 +56,7 @@ export function EnterDialogModal({ open, onOpenChange, onEnter }: EnterDialogMod
             {t('enterPasswordPrompt')}
           </p>
 
-          <PasswordInput
+          <FlexiblePasswordInput
             value={password}
             onChange={(v) => {
               setPassword(v);
@@ -73,7 +75,7 @@ export function EnterDialogModal({ open, onOpenChange, onEnter }: EnterDialogMod
 
           <Button
             onClick={() => handleEnter()}
-            disabled={password.length !== 4 || loading}
+            disabled={!isValidLength || loading}
             className={cn(
               "w-full bg-accent hover:bg-accent/90 text-accent-foreground",
               "font-semibold py-6 rounded-xl transition-all"
