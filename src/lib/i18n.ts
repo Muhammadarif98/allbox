@@ -15,6 +15,11 @@ export const translations = {
     searchDialogs: 'Search dialogs...',
     noArchivedDialogs: 'No archived dialogs',
     
+    // Security warning
+    securityWarningTitle: 'Important Notice',
+    securityWarningText: 'This platform uses simple 4-digit codes. Anyone who guesses the code can access your dialog. Do not upload sensitive personal documents, passwords, or confidential data.',
+    securityWarningTips: 'AllBox is designed for quick file transfers between your own devices. Remember to delete files after transfer if they contain sensitive information. This is not a messenger or long-term storage.',
+    
     // Password screen
     savePassword: 'Save Your Password',
     onlyTime: 'only time',
@@ -160,6 +165,11 @@ export const translations = {
     footer: 'Файлы хранятся безопасно. Максимум 1 ГБ на файл.',
     searchDialogs: 'Поиск диалогов...',
     noArchivedDialogs: 'Нет архивных диалогов',
+    
+    // Security warning
+    securityWarningTitle: 'Важное предупреждение',
+    securityWarningText: 'Платформа использует простые 4-значные коды. Любой, кто угадает код, может получить доступ к диалогу. Не загружайте личные документы, пароли или конфиденциальные данные.',
+    securityWarningTips: 'AllBox создан для быстрой передачи файлов между вашими устройствами. Не забывайте удалять файлы после передачи, если они содержат важную информацию. Это не мессенджер и не хранилище.',
     
     // Password screen
     savePassword: 'Сохраните пароль',
