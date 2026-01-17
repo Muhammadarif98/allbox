@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Loader2, Edit3, Check, X, LogOut, Download, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Users, Loader2, Edit3, Check, X, LogOut, Download, FolderOpen, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FileCard } from '@/components/FileCard';
@@ -13,6 +13,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ForwardMessageModal } from '@/components/ForwardMessageModal';
 import { ForwardFileModal } from '@/components/ForwardFileModal';
+import { AIChatModal } from '@/components/AIChatModal';
 import { supabase } from '@/integrations/supabase/client';
 import { hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getStoredDialogs } from '@/lib/device';
 import { t } from '@/lib/i18n';
@@ -68,6 +69,7 @@ export default function DialogView() {
   const [forwardFileModalOpen, setForwardFileModalOpen] = useState(false);
   const [forwardingFileId, setForwardingFileId] = useState<string | null>(null);
   const [mediaPanelOpen, setMediaPanelOpen] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
@@ -437,6 +439,7 @@ export default function DialogView() {
           </div>
           
           <div className="flex items-center gap-3 flex-wrap">
+            <Button onClick={() => setAiChatOpen(true)} variant="outline" size="sm" className="text-accent border-accent/50 hover:bg-accent/10"><Bot className="w-4 h-4 mr-2" />AI</Button>
             <Button onClick={() => setMediaPanelOpen(true)} variant="outline" size="sm" className="text-accent border-accent/50 hover:bg-accent/10"><FolderOpen className="w-4 h-4 mr-2" />{t('openMedia')}</Button>
             <Button onClick={handleDownloadPassword} variant="outline" size="sm" className="text-secondary border-secondary/50 hover:bg-secondary/10"><Download className="w-4 h-4 mr-2" />{t('downloadPassword')}</Button>
             <Button onClick={handleExitDialog} variant="outline" size="sm" className="text-destructive border-destructive/50 hover:bg-destructive/10"><LogOut className="w-4 h-4 mr-2" />{t('exitDialog')}</Button>
@@ -534,6 +537,11 @@ export default function DialogView() {
         onOpenChange={setForwardFileModalOpen}
         currentDialogId={dialogId || ''}
         onForward={handleForwardFile}
+      />
+      
+      <AIChatModal
+        open={aiChatOpen}
+        onOpenChange={setAiChatOpen}
       />
     </div>
   );
