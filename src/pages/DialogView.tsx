@@ -542,6 +542,8 @@ export default function DialogView() {
       <AIChatModal
         open={aiChatOpen}
         onOpenChange={setAiChatOpen}
+        files={files.map(f => ({ id: f.id, file_name: f.file_name, file_path: f.file_path }))}
+        onSendToDialog={handleSendText}
       />
     </div>
   );

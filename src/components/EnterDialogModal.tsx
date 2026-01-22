@@ -21,16 +21,17 @@ export function EnterDialogModal({ open, onOpenChange, onEnter }: EnterDialogMod
 
   const handleEnter = async (pwd?: string) => {
     const passwordToUse = pwd || password;
+    // Only validate when explicitly submitting (button click or Enter key from FlexiblePasswordInput)
     if (passwordToUse.length !== 4 && passwordToUse.length !== 6) return;
     
     setLoading(true);
-    setError(false);
+    // Don't clear error here - let the user see what happened
     
     const success = await onEnter(passwordToUse);
     
     if (!success) {
       setError(true);
-      setPassword('');
+      // Only clear password on explicit submit failure, not on input change
     }
     
     setLoading(false);

@@ -118,22 +118,31 @@ export function FlexiblePasswordInput({
 }: FlexiblePasswordInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+
+  // Reset attemptedSubmit when value changes
+  useEffect(() => {
+    setAttemptedSubmit(false);
+  }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value.replace(/\D/g, '').slice(0, 6);
     onChange(newValue);
-    
-    // Trigger complete for both 4 and 6 digit codes
-    if ((newValue.length === 4 || newValue.length === 6) && onComplete) {
-      onComplete(newValue);
-    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && (value.length === 4 || value.length === 6) && onComplete) {
-      onComplete(value);
+    if (e.key === 'Enter') {
+      if (value.length === 4 || value.length === 6) {
+        setAttemptedSubmit(true);
+        if (onComplete) {
+          onComplete(value);
+        }
+      }
     }
   };
+
+  // Show error only if user attempted to submit OR if error prop is true and we have 4 or 6 digits
+  const showError = error && attemptedSubmit;
 
   return (
     <div className="space-y-2">
@@ -153,7 +162,7 @@ export function FlexiblePasswordInput({
           "bg-card border-2 transition-all duration-200",
           "focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background",
           "placeholder:text-muted-foreground/30 placeholder:tracking-normal",
-          error 
+          showError 
             ? "border-destructive text-destructive animate-pulse" 
             : focused 
               ? "border-accent text-accent" 
@@ -163,7 +172,7 @@ export function FlexiblePasswordInput({
         placeholder="••••••"
       />
       <p className="text-xs text-muted-foreground text-center">
-        {value.length}/6
+        {value.length}/6 {value.length === 4 && '(or press Enter)'}
       </p>
     </div>
   );
