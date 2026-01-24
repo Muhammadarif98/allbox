@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bot, User, Send, Loader2, Plus, Trash2, Paperclip, Copy, Image, FileText, X, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Bot, User, Send, Loader2, Plus, Trash2, Paperclip, Copy, Image, FileText, X, MessageSquare, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -375,52 +375,65 @@ export default function AIChat() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <div className={cn(
-          "border-r bg-card flex flex-col transition-all duration-200",
+          "border-r bg-card flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
           sidebarOpen ? "w-64" : "w-0"
         )}>
-          {sidebarOpen && (
-            <>
-              <div className="p-3 border-b">
-                <Button onClick={handleNewChat} className="w-full" size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('newChat')}
-                </Button>
-              </div>
-              <ScrollArea className="flex-1">
-                <div className="p-2 space-y-1">
-                  {conversations.length === 0 && (
-                    <p className="text-center text-muted-foreground text-sm py-4">{t('noChats')}</p>
-                  )}
-                  {conversations.map(conv => (
-                    <div
-                      key={conv.id}
-                      onClick={() => handleSelectConversation(conv.id)}
-                      className={cn(
-                        "flex items-center justify-between p-2 rounded-lg cursor-pointer group",
-                        selectedConversation === conv.id 
-                          ? "bg-accent/20 text-accent-foreground" 
-                          : "hover:bg-muted"
-                      )}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <MessageSquare className="w-4 h-4 shrink-0" />
-                        <span className="text-sm truncate">{conv.title}</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                        onClick={(e) => handleDeleteChat(conv.id, e)}
-                      >
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
+          <div className={cn(
+            "flex flex-col h-full transition-opacity duration-200",
+            sidebarOpen ? "opacity-100" : "opacity-0"
+          )}>
+            <div className="p-3 border-b flex items-center gap-2">
+              <Button onClick={handleNewChat} className="flex-1" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                {t('newChat')}
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="shrink-0">
+                <PanelLeftClose className="w-4 h-4" />
+              </Button>
+            </div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {conversations.length === 0 && (
+                  <p className="text-center text-muted-foreground text-sm py-4">{t('noChats')}</p>
+                )}
+                {conversations.map(conv => (
+                  <div
+                    key={conv.id}
+                    onClick={() => handleSelectConversation(conv.id)}
+                    className={cn(
+                      "flex items-center justify-between p-2 rounded-lg cursor-pointer group",
+                      selectedConversation === conv.id 
+                        ? "bg-accent/20 text-accent-foreground" 
+                        : "hover:bg-muted"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <MessageSquare className="w-4 h-4 shrink-0" />
+                      <span className="text-sm truncate">{conv.title}</span>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </>
-          )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                      onClick={(e) => handleDeleteChat(conv.id, e)}
+                    >
+                      <Trash2 className="w-3 h-3 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
         </div>
+
+        {/* Toggle button when sidebar is closed */}
+        {!sidebarOpen && (
+          <div className="border-r flex items-start pt-3 px-2">
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+              <PanelLeft className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Main chat area */}
         <div className="flex-1 flex flex-col min-w-0">
