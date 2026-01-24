@@ -13,7 +13,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ForwardMessageModal } from '@/components/ForwardMessageModal';
 import { ForwardFileModal } from '@/components/ForwardFileModal';
-import { AIChatModal } from '@/components/AIChatModal';
+
 import { supabase } from '@/integrations/supabase/client';
 import { hasDialogAccess, getDeviceLabelForDialog, addStoredDialog, getDialogName, updateStoredDialogName, archiveDialog, getDeviceName, getStoredDialogs } from '@/lib/device';
 import { t } from '@/lib/i18n';
@@ -69,7 +69,7 @@ export default function DialogView() {
   const [forwardFileModalOpen, setForwardFileModalOpen] = useState(false);
   const [forwardingFileId, setForwardingFileId] = useState<string | null>(null);
   const [mediaPanelOpen, setMediaPanelOpen] = useState(false);
-  const [aiChatOpen, setAiChatOpen] = useState(false);
+  
   const isMobile = useIsMobile();
 
   const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
@@ -439,7 +439,7 @@ export default function DialogView() {
           </div>
           
           <div className="flex items-center gap-3 flex-wrap">
-            <Button onClick={() => setAiChatOpen(true)} variant="outline" size="sm" className="text-accent border-accent/50 hover:bg-accent/10"><Bot className="w-4 h-4 mr-2" />AI</Button>
+            <Button onClick={() => navigate(`/dialog/${dialogId}/ai`)} variant="outline" size="sm" className="text-accent border-accent/50 hover:bg-accent/10"><Bot className="w-4 h-4 mr-2" />AI</Button>
             <Button onClick={() => setMediaPanelOpen(true)} variant="outline" size="sm" className="text-accent border-accent/50 hover:bg-accent/10"><FolderOpen className="w-4 h-4 mr-2" />{t('openMedia')}</Button>
             <Button onClick={handleDownloadPassword} variant="outline" size="sm" className="text-secondary border-secondary/50 hover:bg-secondary/10"><Download className="w-4 h-4 mr-2" />{t('downloadPassword')}</Button>
             <Button onClick={handleExitDialog} variant="outline" size="sm" className="text-destructive border-destructive/50 hover:bg-destructive/10"><LogOut className="w-4 h-4 mr-2" />{t('exitDialog')}</Button>
@@ -539,12 +539,6 @@ export default function DialogView() {
         onForward={handleForwardFile}
       />
       
-      <AIChatModal
-        open={aiChatOpen}
-        onOpenChange={setAiChatOpen}
-        files={files.map(f => ({ id: f.id, file_name: f.file_name, file_path: f.file_path }))}
-        onSendToDialog={handleSendText}
-      />
     </div>
   );
 }
