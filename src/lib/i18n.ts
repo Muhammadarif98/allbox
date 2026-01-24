@@ -153,6 +153,28 @@ export const translations = {
     
     // Stats
     totalDialogs: 'Total dialogs created',
+    
+    // AI Chat
+    aiAssistant: 'AI Assistant',
+    aiChats: 'AI Chats',
+    newChat: 'New Chat',
+    deleteChat: 'Delete Chat',
+    deleteChatConfirm: 'Delete this chat?',
+    noChats: 'No chats yet',
+    startConversation: 'Start a conversation with AI',
+    attachFilesHint: 'Attach files from the dialog for analysis',
+    supportedFormats: '📷 Images (OCR) • 📄 PDF/Word/Excel • 📝 Text/Code',
+    analyzeFiles: 'Analyze files',
+    sendToDialog: 'Send to dialog',
+    sentToDialog: 'Sent to dialog',
+    copiedToClipboard: 'Copied to clipboard',
+    aiError: 'AI error occurred',
+    rateLimitExceeded: 'Rate limit exceeded. Please wait.',
+    creditsExhausted: 'AI credits exhausted.',
+    fileAttached: 'Attached',
+    fileTooLarge: 'File too large for analysis',
+    unsupportedFileType: 'Unsupported file type',
+    backToDialog: 'Back to dialog',
   },
   ru: {
     // Homepage
@@ -304,6 +326,28 @@ export const translations = {
     
     // Stats
     totalDialogs: 'Всего создано диалогов',
+    
+    // AI Chat
+    aiAssistant: 'AI Ассистент',
+    aiChats: 'AI Чаты',
+    newChat: 'Новый чат',
+    deleteChat: 'Удалить чат',
+    deleteChatConfirm: 'Удалить этот чат?',
+    noChats: 'Пока нет чатов',
+    startConversation: 'Начните разговор с AI',
+    attachFilesHint: 'Прикрепите файлы из диалога для анализа',
+    supportedFormats: '📷 Изображения (OCR) • 📄 PDF/Word/Excel • 📝 Текст/Код',
+    analyzeFiles: 'Анализировать файлы',
+    sendToDialog: 'Отправить в диалог',
+    sentToDialog: 'Отправлено в диалог',
+    copiedToClipboard: 'Скопировано',
+    aiError: 'Ошибка AI',
+    rateLimitExceeded: 'Лимит запросов. Подождите.',
+    creditsExhausted: 'Кредиты AI исчерпаны.',
+    fileAttached: 'Прикреплено',
+    fileTooLarge: 'Файл слишком большой для анализа',
+    unsupportedFileType: 'Неподдерживаемый тип файла',
+    backToDialog: 'Назад к диалогу',
   },
 };
 
