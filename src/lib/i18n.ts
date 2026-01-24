@@ -175,6 +175,10 @@ export const translations = {
     fileTooLarge: 'File too large for analysis',
     unsupportedFileType: 'Unsupported file type',
     backToDialog: 'Back to dialog',
+    attachFiles: 'Attach files',
+    fromDevice: 'From device',
+    fromDialog: 'From dialog',
+    noDialogFiles: 'No files in dialog',
   },
   ru: {
     // Homepage
@@ -348,6 +352,10 @@ export const translations = {
     fileTooLarge: 'Файл слишком большой для анализа',
     unsupportedFileType: 'Неподдерживаемый тип файла',
     backToDialog: 'Назад к диалогу',
+    attachFiles: 'Прикрепить файлы',
+    fromDevice: 'С устройства',
+    fromDialog: 'Из диалога',
+    noDialogFiles: 'Нет файлов в диалоге',
   },
 };
 
