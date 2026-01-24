@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bot, User, Send, Loader2, Plus, Trash2, Paperclip, Copy, Image, FileText, X, MessageSquare, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { ArrowLeft, Bot, User, Send, Loader2, Plus, Trash2, Paperclip, Copy, Image, FileText, X, MessageSquare, PanelLeftClose, PanelLeft, HardDrive, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { hasDialogAccess, getDialogName } from '@/lib/device';
 import { t } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { isImageFile, isVideoFile } from '@/lib/fileUtils';
 
 interface Conversation {
   id: string;
@@ -87,8 +89,12 @@ export default function AIChat() {
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [loadingFileId, setLoadingFileId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [dialogFilesMenuOpen, setDialogFilesMenuOpen] = useState(false);
+  const [filePreviewUrls, setFilePreviewUrls] = useState<Record<string, string>>({});
   const [, setRefresh] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const forceRefresh = useCallback(() => setRefresh(n => n + 1), []);
 
   useEffect(() => {
@@ -126,6 +132,22 @@ export default function AIChat() {
       .eq('dialog_id', dialogId)
       .order('uploaded_at', { ascending: false });
     setDialogFiles(data || []);
+    
+    // Load preview URLs for images and videos
+    if (data) {
+      const previews: Record<string, string> = {};
+      for (const file of data) {
+        if (isImageFile(file.file_name) || isVideoFile(file.file_name)) {
+          const { data: urlData } = await supabase.storage
+            .from('dialog-files')
+            .createSignedUrl(file.file_path, 3600);
+          if (urlData?.signedUrl) {
+            previews[file.id] = urlData.signedUrl;
+          }
+        }
+      }
+      setFilePreviewUrls(previews);
+    }
   };
 
   const loadMessages = async (conversationId: string) => {
@@ -207,6 +229,48 @@ export default function AIChat() {
       toast.error(t('downloadFailed'));
     } finally {
       setLoadingFileId(null);
+    }
+  };
+
+  const handleAttachDialogFile = async (file: DialogFile) => {
+    setDialogFilesMenuOpen(false);
+    setAttachMenuOpen(false);
+    await handleAttachFile(file);
+  };
+
+  const handleDeviceFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setAttachMenuOpen(false);
+    
+    for (const file of Array.from(files)) {
+      const category = getFileCategory(file.name);
+      if (category === 'unsupported') {
+        toast.error(`${t('unsupportedFileType')}: ${file.name}`);
+        continue;
+      }
+
+      const fileId = `device-${Date.now()}-${file.name}`;
+      
+      if (category === 'text') {
+        const text = await file.text();
+        setAttachedFiles(prev => [...prev, { id: fileId, name: file.name, content: text, type: 'text' }]);
+      } else {
+        const arrayBuffer = await file.arrayBuffer();
+        const base64 = arrayBufferToBase64(arrayBuffer);
+        const mimeType = file.type || getMimeType(file.name);
+        setAttachedFiles(prev => [...prev, { 
+          id: fileId, name: file.name, content: `[${category}: ${file.name}]`,
+          type: 'image', mimeType, base64
+        }]);
+      }
+      toast.success(`${t('fileAttached')}: ${file.name}`);
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -517,45 +581,122 @@ export default function AIChat() {
             </div>
           )}
 
-          {/* File selection from dialog */}
-          {dialogFiles.length > 0 && (
-            <div className="px-4 py-2 border-t">
-              <div className="max-w-3xl mx-auto">
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {dialogFiles.slice(0, 10).map(file => {
-                    const category = getFileCategory(file.file_name);
-                    const isDisabled = loadingFileId === file.id || attachedFiles.some(f => f.id === file.id) || category === 'unsupported';
-                    return (
-                      <Button
-                        key={file.id}
-                        size="sm"
-                        variant="outline"
-                        className="shrink-0 text-xs h-7"
-                        disabled={isDisabled}
-                        onClick={() => handleAttachFile(file)}
-                      >
-                        {loadingFileId === file.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                        ) : category === 'image' ? (
-                          <Image className="w-3 h-3 mr-1" />
-                        ) : (
-                          <Paperclip className="w-3 h-3 mr-1" />
-                        )}
-                        <span className="max-w-[100px] truncate">{file.file_name}</span>
-                      </Button>
-                    );
-                  })}
-                  {dialogFiles.length > 10 && (
-                    <span className="text-xs text-muted-foreground self-center">+{dialogFiles.length - 10}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Input area */}
           <div className="p-4 border-t">
             <div className="max-w-3xl mx-auto flex gap-2">
+              {/* Hidden file input for device files */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleDeviceFileSelect}
+                className="hidden"
+                multiple
+                accept=".txt,.md,.json,.csv,.xml,.html,.css,.js,.ts,.tsx,.jsx,.py,.java,.c,.cpp,.h,.sql,.yaml,.yml,.ini,.conf,.log,.sh,.bat,.ps1,.rb,.php,.go,.rs,.swift,.kt,.jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp"
+              />
+              
+              {/* Attach button with popover */}
+              <Popover open={attachMenuOpen} onOpenChange={setAttachMenuOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className="shrink-0">
+                    <Paperclip className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-2" align="start">
+                  <div className="space-y-1">
+                    {/* From device option */}
+                    <button
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                        setAttachMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-left"
+                    >
+                      <HardDrive className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm">{t('fromDevice')}</span>
+                    </button>
+                    
+                    {/* From dialog option with submenu */}
+                    <Popover open={dialogFilesMenuOpen} onOpenChange={setDialogFilesMenuOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-left"
+                        >
+                          <FolderOpen className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm">{t('fromDialog')}</span>
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            {dialogFiles.length}
+                          </span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72 p-2" side="right" align="start">
+                        <ScrollArea className="max-h-80">
+                          {dialogFiles.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              {t('noDialogFiles')}
+                            </p>
+                          ) : (
+                            <div className="space-y-1">
+                              {dialogFiles.map(file => {
+                                const category = getFileCategory(file.file_name);
+                                const isAttached = attachedFiles.some(f => f.id === file.id);
+                                const isDisabled = loadingFileId === file.id || isAttached || category === 'unsupported';
+                                const previewUrl = filePreviewUrls[file.id];
+                                
+                                return (
+                                  <button
+                                    key={file.id}
+                                    onClick={() => handleAttachDialogFile(file)}
+                                    disabled={isDisabled}
+                                    className={cn(
+                                      "w-full flex items-center gap-3 px-2 py-2 rounded-lg transition-colors text-left",
+                                      isDisabled 
+                                        ? "opacity-50 cursor-not-allowed" 
+                                        : "hover:bg-muted cursor-pointer"
+                                    )}
+                                  >
+                                    {/* Preview thumbnail */}
+                                    <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                                      {loadingFileId === file.id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : previewUrl && isImageFile(file.file_name) ? (
+                                        <img 
+                                          src={previewUrl} 
+                                          alt={file.file_name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : previewUrl && isVideoFile(file.file_name) ? (
+                                        <video 
+                                          src={previewUrl}
+                                          className="w-full h-full object-cover"
+                                          muted
+                                        />
+                                      ) : category === 'image' ? (
+                                        <Image className="w-4 h-4 text-muted-foreground" />
+                                      ) : (
+                                        <FileText className="w-4 h-4 text-muted-foreground" />
+                                      )}
+                                    </div>
+                                    
+                                    {/* File info */}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm truncate">{file.file_name}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {(file.file_size / 1024).toFixed(1)} KB
+                                        {isAttached && ' • ✓'}
+                                      </p>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
